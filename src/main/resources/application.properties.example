@@ -1,0 +1,6 @@
+spring.datasource.url=
+spring.datasource.username=
+spring.datasource.password=
+cloudinary.cloud_name=
+cloudinary.api_key=
+cloudinary.api_secret=
