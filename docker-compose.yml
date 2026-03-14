@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  pm-project-postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: "pm_project_db"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+      - "5432:5432"
+
