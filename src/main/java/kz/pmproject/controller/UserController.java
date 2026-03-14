@@ -1,5 +1,6 @@
 package kz.pmproject.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kz.pmproject.model.user.entity.User;
 import kz.pmproject.repository.UserRepository;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @Tag(name = "Users API", description = "Управление пользователями")
+@SecurityRequirement(name = "x-session")
 @RequestMapping("/users")
 @RestController
 @RequiredArgsConstructor
