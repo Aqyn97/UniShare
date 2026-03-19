@@ -1,0 +1,322 @@
+{
+  "info": {
+    "name": " Dev2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "itemId", "value": "1" },
+    { "key": "categoryId", "value": "1" },
+    { "key": "imageId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (admin/password) -> token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "GET /categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session", "value": "{{token}}" }],
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "POST /categories (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session", "value": "{{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Cars\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('categoryId', String(json.id));",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /categories/{id} (ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Auto\"\n}" }
+          }
+        },
+        {
+          "name": "DELETE /categories/{id} (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "x-session", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Items",
+      "item": [
+        {
+          "name": "POST /items",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session", "value": "{{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/items", "host": ["{{baseUrl}}"], "path": ["items"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": {{categoryId}},\n  \"title\": \"BMW X5\",\n  \"description\": \"good\",\n  \"price\": 1000,\n  \"currency\": \"KZT\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('itemId', String(json.id));",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /items (search+filters+pagination)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/items?q=bmw&categoryId={{categoryId}}&minPrice=1&maxPrice=999999&published=false&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["items"],
+              "query": [
+                { "key": "q", "value": "bmw" },
+                { "key": "categoryId", "value": "{{categoryId}}" },
+                { "key": "minPrice", "value": "1" },
+                { "key": "maxPrice", "value": "999999" },
+                { "key": "published", "value": "false" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /items/{id}",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /items/{id} (owner)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"BMW X5 updated\"\n}" }
+          }
+        },
+        {
+          "name": "POST /items/{id}/publish",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-session", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}/publish",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}", "publish"]
+            }
+          }
+        },
+        {
+          "name": "POST /items/{id}/hide",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-session", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}/hide",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}", "hide"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /items/{id} (owner/admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "x-session", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Availability",
+      "item": [
+        {
+          "name": "GET /items/{id}/availability",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-session", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}/availability",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}", "availability"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /items/{id}/availability (owner)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}/availability",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}", "availability"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blocks\": [\n    { \"startDate\": \"2026-03-20\", \"endDate\": \"2026-03-25\" }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cloudinary + Images",
+      "item": [
+        {
+          "name": "POST /uploads/cloudinary/signature",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/uploads/cloudinary/signature",
+              "host": ["{{baseUrl}}"],
+              "path": ["uploads", "cloudinary", "signature"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"params\": {\n    \"timestamp\": 1710000000,\n    \"folder\": \"items/{{itemId}}\"\n  }\n}" }
+          }
+        },
+        {
+          "name": "POST /items/{id}/images (attach)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-session", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}", "images"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicId\": \"items/{{itemId}}/abc123\",\n  \"url\": \"https://res.cloudinary.com/<cloud>/image/upload/v1/items/{{itemId}}/abc123.jpg\"\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /items/{id}/images/{imageId}",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "x-session", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}/images/{{imageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}", "images", "{{imageId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

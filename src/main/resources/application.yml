@@ -1,0 +1,38 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: pm-project
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    # Defaults to local docker-compose (5433). Override via .env for Neon or local setup.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/pm_project_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: 'classpath:db.migration'
+
+logging:
+  level:
+    org.flywaydb: INFO
+
+server:
+  port: 8080
+
+cloudinary:
+  cloudName: ${CLOUDINARY_CLOUD_NAME:}
+  apiKey: ${CLOUDINARY_API_KEY:}
+  apiSecret: ${CLOUDINARY_API_SECRET:}
