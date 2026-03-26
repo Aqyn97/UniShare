@@ -20,4 +20,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             LocalDate dateTo,
             LocalDate dateFrom
     );
+
+    long countBy();
 }
