@@ -1,5 +1,6 @@
 package kz.pmproject.service;
 
+import kz.pmproject.model.market.dto.AdminItemResponse;
 import kz.pmproject.model.market.dto.AdminStatsResponse;
 import kz.pmproject.model.market.entity.Booking;
 import kz.pmproject.model.market.entity.Item;
@@ -48,8 +49,23 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    public List<Item> getItems() {
-        return itemRepository.findAll();
+    public List<AdminItemResponse> getItems() {
+        return itemRepository.findAll().stream()
+                .map(item -> AdminItemResponse.builder()
+                        .id(item.getId())
+                        .ownerId(item.getOwner() != null ? item.getOwner().getId() : null)
+                        .ownerUsername(item.getOwner() != null ? item.getOwner().getUsername() : null)
+                        .categoryId(item.getCategory() != null ? item.getCategory().getId() : null)
+                        .categoryName(item.getCategory() != null ? item.getCategory().getName() : null)
+                        .title(item.getTitle())
+                        .description(item.getDescription())
+                        .price(item.getPrice())
+                        .currency(item.getCurrency())
+                        .published(item.isPublished())
+                        .createdAt(item.getCreatedAt())
+                        .updatedAt(item.getUpdatedAt())
+                        .build())
+                .toList();
     }
 
     @Transactional

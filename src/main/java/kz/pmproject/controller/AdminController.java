@@ -1,5 +1,6 @@
 package kz.pmproject.controller;
 
+import kz.pmproject.model.market.dto.AdminItemResponse;
 import kz.pmproject.model.market.dto.AdminStatsResponse;
 import kz.pmproject.model.market.entity.Booking;
 import kz.pmproject.model.market.entity.Item;
@@ -36,7 +37,7 @@ public class AdminController {
     }
 
     @GetMapping("/items")
-    public ResponseEntity<List<Item>> getItems() {
+    public ResponseEntity<List<AdminItemResponse>> getItems() {
         return ResponseEntity.ok(adminService.getItems());
     }
 

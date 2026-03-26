@@ -45,6 +45,7 @@ public class User {
     private BigDecimal ratingAvg;
 
     @Column(name = "rating_count", nullable = false)
+    @Builder.Default
     private Integer ratingCount = 0;
 
     @ManyToMany(fetch = FetchType.LAZY)
