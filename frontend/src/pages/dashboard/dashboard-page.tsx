@@ -29,39 +29,39 @@ export function DashboardPage() {
   return (
     <div className="space-y-8">
       <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">Protected route</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Hello, {user.username}</h1>
+        <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">UniShare dashboard</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Welcome, {user.username}</h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600">
-          This dashboard proves the session flow works end to end: token storage, current user hydration,
-          protected navigation, and permission-aware rendering.
+          This area is the personal workspace for managing listings, rental activity, and account access inside
+          the campus marketplace.
         </p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <StatCard
-          label="User ID"
+          label="Member ID"
           value={String(user.userId)}
-          helper="Returned by the backend /auth/me endpoint and used as the current identity anchor."
+          helper="Your unique UniShare account identifier used to keep marketplace activity linked to the right user."
         />
         <StatCard
           label="Roles"
           value={user.roles.join(', ') || 'None'}
-          helper="Roles are useful for future dashboard sections, admin menus, and feature visibility."
+          helper="Roles control which marketplace sections and moderation tools are available to your account."
         />
         <StatCard
-          label="Permissions"
+          label="Access rules"
           value={String(user.permissions.length)}
-          helper="The frontend currently checks permission flags to unlock admin-only routes."
+          helper="Permission flags define which protected UniShare actions and admin screens can be opened."
         />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold tracking-tight text-slate-950">Available next steps</h2>
+          <h2 className="text-xl font-semibold tracking-tight text-slate-950">Platform goals</h2>
           <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-            <li>Add item catalog pages wired to `GET /items`.</li>
-            <li>Build booking flows on top of the existing booking status lifecycle.</li>
-            <li>Connect review and image management screens after that.</li>
+            <li>Manage personal item listings for books, electronics, tools, and other useful resources.</li>
+            <li>Track rental requests and booking activity between students.</li>
+            <li>Support reviews and ratings that improve trust within the university community.</li>
           </ul>
         </article>
 
@@ -72,14 +72,14 @@ export function DashboardPage() {
               to="/"
               className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
             >
-              Back home
+              Back to home
             </Link>
             {isAdmin ? (
               <Link
                 to="/admin"
                 className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
               >
-                Open admin area
+                Open admin panel
               </Link>
             ) : null}
           </div>
@@ -87,7 +87,7 @@ export function DashboardPage() {
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold tracking-tight text-slate-950">Resolved permissions</h2>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-950">Account permissions</h2>
         <div className="mt-4 flex flex-wrap gap-2">
           {user.permissions.map((permission) => (
             <span

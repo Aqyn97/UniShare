@@ -45,10 +45,10 @@ export function RegisterPage() {
   return (
     <section className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
       <div className="mb-8">
-        <p className="text-sm font-medium text-slate-500">Create account</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Register</h1>
+        <p className="text-sm font-medium text-slate-500">Join UniShare</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Create account</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Registration calls the backend and stores the returned session token automatically.
+          Create your profile to list items, request rentals, and participate in the campus sharing community.
         </p>
       </div>
 
@@ -58,7 +58,7 @@ export function RegisterPage() {
           <input
             {...register('username')}
             className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
-            placeholder="new_user"
+            placeholder="student123"
           />
           {errors.username ? <span className="mt-2 block text-sm text-rose-600">{errors.username.message}</span> : null}
         </label>
@@ -69,7 +69,7 @@ export function RegisterPage() {
             {...register('email')}
             type="email"
             className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
-            placeholder="user@example.com"
+            placeholder="student@university.edu"
           />
           {errors.email ? <span className="mt-2 block text-sm text-rose-600">{errors.email.message}</span> : null}
         </label>
@@ -80,7 +80,7 @@ export function RegisterPage() {
             {...register('password')}
             type="password"
             className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
-            placeholder="Choose a password"
+            placeholder="Create a password"
           />
           {errors.password ? <span className="mt-2 block text-sm text-rose-600">{errors.password.message}</span> : null}
         </label>

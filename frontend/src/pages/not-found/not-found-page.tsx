@@ -6,13 +6,13 @@ export function NotFoundPage() {
       <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">404</p>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Page not found</h1>
       <p className="mt-4 text-sm leading-7 text-slate-600">
-        The route you requested does not exist in this MVP yet.
+        This UniShare page does not exist or has not been added yet.
       </p>
       <Link
         to="/"
         className="mt-8 inline-flex rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
       >
-        Go home
+        Return to home
       </Link>
     </div>
   )

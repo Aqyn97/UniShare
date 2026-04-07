@@ -2,29 +2,29 @@ export function AdminPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">Admin route</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Admin placeholder</h1>
+        <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">Campus moderation</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">UniShare admin panel</h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600">
-          This page is intentionally simple. Its main job in the MVP is to prove that permission-based
-          routing works and that only users with admin-level permissions can open this area.
+          This area is intended for campus administrators who monitor users, listings, and marketplace safety
+          across the university community.
         </p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-medium text-slate-500">Users</p>
-          <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Pending UI</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Wire this to `/admin/users` for ban and unban actions.</p>
+          <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Moderation module</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Review student accounts, handle reports, and support safe peer-to-peer rentals.</p>
         </article>
         <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Items</p>
-          <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Pending UI</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Wire this to `/admin/items` and the hide action later.</p>
+          <p className="text-sm font-medium text-slate-500">Listings</p>
+          <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Catalog oversight</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Monitor published items and keep the marketplace relevant, safe, and campus-focused.</p>
         </article>
         <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Stats</p>
-          <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Pending UI</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Wire this to `/admin/stats` when dashboard cards are ready.</p>
+          <p className="text-sm font-medium text-slate-500">Analytics</p>
+          <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Platform insights</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Track usage, bookings, and trust signals as UniShare grows across the university.</p>
         </article>
       </section>
     </div>

@@ -27,11 +27,11 @@ function RootLayout() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white">
-              PM
+              US
             </div>
             <div>
-              <p className="text-sm font-semibold">PM Project</p>
-              <p className="text-xs text-slate-500">React + Tailwind MVP</p>
+              <p className="text-sm font-semibold">UniShare</p>
+              <p className="text-xs text-slate-500">Secure campus rental marketplace</p>
             </div>
           </Link>
 
@@ -51,7 +51,7 @@ function RootLayout() {
 
           <div className="flex items-center gap-3">
             {isLoading ? (
-              <span className="text-sm text-slate-500">Loading session...</span>
+              <span className="text-sm text-slate-500">Loading account...</span>
             ) : isAuthenticated && user ? (
               <>
                 <div className="hidden text-right sm:block">
@@ -63,7 +63,7 @@ function RootLayout() {
                   onClick={logout}
                   className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
                 >
-                  Logout
+                  Log out
                 </button>
               </>
             ) : (
@@ -97,7 +97,7 @@ function GuestOnlyRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
 
   if (isLoading) {
-    return <div className="py-16 text-center text-slate-500">Checking session...</div>
+    return <div className="py-16 text-center text-slate-500">Checking account access...</div>
   }
 
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children

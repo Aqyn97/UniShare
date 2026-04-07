@@ -43,10 +43,10 @@ export function LoginPage() {
   return (
     <section className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
       <div className="mb-8">
-        <p className="text-sm font-medium text-slate-500">Welcome back</p>
+        <p className="text-sm font-medium text-slate-500">Welcome to UniShare</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Sign in</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Use your backend credentials to get an active <code>x-session</code> token.
+          Sign in with your student account to access the secure campus rental marketplace.
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export function LoginPage() {
           <input
             {...register('username')}
             className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
-            placeholder="admin"
+            placeholder="student123"
           />
           {errors.username ? <span className="mt-2 block text-sm text-rose-600">{errors.username.message}</span> : null}
         </label>
@@ -67,7 +67,7 @@ export function LoginPage() {
             {...register('password')}
             type="password"
             className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
-            placeholder="password"
+            placeholder="Enter your password"
           />
           {errors.password ? <span className="mt-2 block text-sm text-rose-600">{errors.password.message}</span> : null}
         </label>
