@@ -8,6 +8,8 @@ import { LoginPage } from './pages/auth/login-page'
 import { RegisterPage } from './pages/auth/register-page'
 import { DashboardPage } from './pages/dashboard/dashboard-page'
 import { HomePage } from './pages/home/home-page'
+import { CreateItemPage } from './pages/items/create-item-page'
+import { ItemDetailPage } from './pages/items/item-detail-page'
 import { NotFoundPage } from './pages/not-found/not-found-page'
 
 const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
@@ -37,26 +39,34 @@ function RootLayout() {
 
           <nav className="hidden items-center gap-2 rounded-full bg-slate-100 p-1 md:flex">
             <NavLink to="/" className={navLinkClassName}>
-              Home
+              Browse
             </NavLink>
-            <NavLink to="/dashboard" className={navLinkClassName}>
-              Dashboard
-            </NavLink>
-            {isAdmin ? (
+            {isAuthenticated && (
+              <NavLink to="/dashboard" className={navLinkClassName}>
+                Dashboard
+              </NavLink>
+            )}
+            {isAdmin && (
               <NavLink to="/admin" className={navLinkClassName}>
                 Admin
               </NavLink>
-            ) : null}
+            )}
           </nav>
 
           <div className="flex items-center gap-3">
             {isLoading ? (
-              <span className="text-sm text-slate-500">Loading account...</span>
+              <span className="text-sm text-slate-500">Loading...</span>
             ) : isAuthenticated && user ? (
               <>
+                <Link
+                  to="/items/new"
+                  className="hidden rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 sm:block"
+                >
+                  + New listing
+                </Link>
                 <div className="hidden text-right sm:block">
                   <p className="text-sm font-medium">{user.username}</p>
-                  <p className="text-xs text-slate-500">{user.email ?? 'No email provided'}</p>
+                  <p className="text-xs text-slate-500">{user.email ?? 'No email'}</p>
                 </div>
                 <button
                   type="button"
@@ -140,6 +150,15 @@ function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="items/new"
+          element={
+            <ProtectedRoute>
+              <CreateItemPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="items/:id" element={<ItemDetailPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
