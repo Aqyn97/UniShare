@@ -97,9 +97,88 @@ function RootLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-10">
+      <main className="mx-auto max-w-6xl px-6 py-10 pb-24 md:pb-10">
         <Outlet />
       </main>
+
+      {/* Mobile bottom nav */}
+      <nav className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden">
+        <div className="flex items-stretch">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              `flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-xs font-medium transition ${
+                isActive ? 'text-slate-900' : 'text-slate-400 hover:text-slate-700'
+              }`
+            }
+          >
+            <span className="text-lg leading-none">⊞</span>
+            Browse
+          </NavLink>
+
+          {isAuthenticated && (
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-xs font-medium transition ${
+                  isActive ? 'text-slate-900' : 'text-slate-400 hover:text-slate-700'
+                }`
+              }
+            >
+              <span className="text-lg leading-none">◫</span>
+              Dashboard
+            </NavLink>
+          )}
+
+          {isAuthenticated && (
+            <Link
+              to="/items/new"
+              className="flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-xs font-medium text-slate-400 transition hover:text-slate-700"
+            >
+              <span className="text-lg leading-none">＋</span>
+              New
+            </Link>
+          )}
+
+          {isAdmin && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                `flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-xs font-medium transition ${
+                  isActive ? 'text-slate-900' : 'text-slate-400 hover:text-slate-700'
+                }`
+              }
+            >
+              <span className="text-lg leading-none">⚙</span>
+              Admin
+            </NavLink>
+          )}
+
+          {isAuthenticated ? (
+            <button
+              type="button"
+              onClick={logout}
+              className="flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-xs font-medium text-slate-400 transition hover:text-slate-700"
+            >
+              <span className="text-lg leading-none">→</span>
+              Log out
+            </button>
+          ) : (
+            <NavLink
+              to="/login"
+              className={({ isActive }) =>
+                `flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-xs font-medium transition ${
+                  isActive ? 'text-slate-900' : 'text-slate-400 hover:text-slate-700'
+                }`
+              }
+            >
+              <span className="text-lg leading-none">↪</span>
+              Login
+            </NavLink>
+          )}
+        </div>
+      </nav>
     </div>
   )
 }

@@ -6,11 +6,15 @@ import {
   approveBooking,
   cancelBooking,
   fetchMyBookings,
+  handoverBooking,
   rejectBooking,
+  returnBooking,
 } from '../../shared/api/bookings'
-import { deleteItem, fetchItems, hideItem, publishItem } from '../../shared/api/items'
+import { deleteItem, fetchItem, fetchItems, hideItem, publishItem } from '../../shared/api/items'
 import { getErrorMessage } from '../../shared/api/client'
+import { BookingBadge } from '../../shared/components/booking-badge'
 import { Button } from '../../shared/components/button'
+import { formatDate } from '../../shared/utils/format'
 import type { Booking, BookingStatus, Item } from '../../shared/api/types'
 
 type Tab = 'listings' | 'renter' | 'owner'
@@ -28,7 +32,6 @@ export function DashboardPage() {
         <p className="mt-1 text-sm text-slate-500">Welcome back, {user.username}</p>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 w-fit">
         {(
           [
@@ -52,7 +55,6 @@ export function DashboardPage() {
         ))}
       </div>
 
-      {/* Content */}
       {tab === 'listings' && <MyListings userId={user.userId} />}
       {tab === 'renter' && <RenterBookings />}
       {tab === 'owner' && <OwnerBookings />}
@@ -65,30 +67,18 @@ export function DashboardPage() {
 function MyListings({ userId }: { userId: number }) {
   const qc = useQueryClient()
 
-  // No ownerId filter on the public API — fetch a large page and filter client-side.
   const { data, isLoading, isError } = useQuery({
     queryKey: ['my-items'],
     queryFn: () => fetchItems({ size: 100 }).then((r) => r.data),
   })
 
   const items = (data?.content ?? []).filter((item) => item.ownerId === userId)
-
   const invalidate = () => qc.invalidateQueries({ queryKey: ['my-items'] })
 
-  const publish = useMutation({
-    mutationFn: (id: number) => publishItem(id),
-    onSuccess: invalidate,
-  })
-
-  const hide = useMutation({
-    mutationFn: (id: number) => hideItem(id),
-    onSuccess: invalidate,
-  })
-
-  const remove = useMutation({
-    mutationFn: (id: number) => deleteItem(id),
-    onSuccess: invalidate,
-  })
+  const publish = useMutation({ mutationFn: (id: number) => publishItem(id), onSuccess: invalidate })
+  const hide = useMutation({ mutationFn: (id: number) => hideItem(id), onSuccess: invalidate })
+  const remove = useMutation({ mutationFn: (id: number) => deleteItem(id), onSuccess: invalidate })
+  const isActing = publish.isPending || hide.isPending || remove.isPending
 
   if (isLoading) return <SectionSkeleton rows={3} />
   if (isError) return <ErrorBanner message="Failed to load listings." />
@@ -97,7 +87,9 @@ function MyListings({ userId }: { userId: number }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">
-          {items.length === 0 ? 'No listings yet' : `${items.length} listing${items.length === 1 ? '' : 's'}`}
+          {items.length === 0
+            ? 'No listings yet'
+            : `${items.length} listing${items.length === 1 ? '' : 's'}`}
         </p>
         <Link to="/items/new">
           <Button>+ New listing</Button>
@@ -123,9 +115,7 @@ function MyListings({ userId }: { userId: number }) {
                   remove.mutate(item.id)
                 }
               }}
-              isActing={
-                publish.isPending || hide.isPending || remove.isPending
-              }
+              isActing={isActing}
             />
           ))}
         </div>
@@ -149,7 +139,6 @@ function ItemRow({
 }) {
   return (
     <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4">
-      {/* Thumbnail */}
       <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
         {item.images[0] ? (
           <img src={item.images[0].url} alt={item.title} className="h-full w-full object-cover" />
@@ -159,8 +148,6 @@ function ItemRow({
           </div>
         )}
       </div>
-
-      {/* Info */}
       <div className="min-w-0 flex-1">
         <Link
           to={`/items/${item.id}`}
@@ -177,8 +164,6 @@ function ItemRow({
           )}
         </div>
       </div>
-
-      {/* Actions */}
       <div className="flex shrink-0 items-center gap-2">
         {item.published ? (
           <button
@@ -217,16 +202,16 @@ function ItemRow({
 
 function RenterBookings() {
   const qc = useQueryClient()
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['bookings', 'renter'] })
 
   const { data: bookings = [], isLoading, isError } = useQuery({
     queryKey: ['bookings', 'renter'],
     queryFn: () => fetchMyBookings('renter').then((r) => r.data),
   })
 
-  const cancel = useMutation({
-    mutationFn: (id: number) => cancelBooking(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['bookings', 'renter'] }),
-  })
+  const cancel = useMutation({ mutationFn: cancelBooking, onSuccess: invalidate })
+  const returnItem = useMutation({ mutationFn: returnBooking, onSuccess: invalidate })
+  const isActing = cancel.isPending || returnItem.isPending
 
   if (isLoading) return <SectionSkeleton rows={3} />
   if (isError) return <ErrorBanner message="Failed to load bookings." />
@@ -236,16 +221,26 @@ function RenterBookings() {
     <div className="space-y-2">
       {bookings.map((booking) => (
         <BookingRow key={booking.id} booking={booking}>
-          {canCancel(booking.status) && (
-            <button
-              type="button"
-              disabled={cancel.isPending}
-              onClick={() => cancel.mutate(booking.id)}
-              className="text-xs text-rose-500 hover:text-rose-700 disabled:opacity-40"
-            >
-              Cancel
-            </button>
-          )}
+          <div className="flex gap-2">
+            {booking.status === 'ACTIVE' && (
+              <ActionButton
+                onClick={() => returnItem.mutate(booking.id)}
+                disabled={isActing}
+                variant="primary"
+              >
+                Mark returned
+              </ActionButton>
+            )}
+            {canCancel(booking.status) && (
+              <ActionButton
+                onClick={() => cancel.mutate(booking.id)}
+                disabled={isActing}
+                variant="danger"
+              >
+                Cancel
+              </ActionButton>
+            )}
+          </div>
         </BookingRow>
       ))}
     </div>
@@ -256,78 +251,79 @@ function RenterBookings() {
 
 function OwnerBookings() {
   const qc = useQueryClient()
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['bookings', 'owner'] })
 
   const { data: bookings = [], isLoading, isError } = useQuery({
     queryKey: ['bookings', 'owner'],
     queryFn: () => fetchMyBookings('owner').then((r) => r.data),
   })
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['bookings', 'owner'] })
-
-  const approve = useMutation({
-    mutationFn: (id: number) => approveBooking(id),
-    onSuccess: invalidate,
-  })
-
-  const reject = useMutation({
-    mutationFn: (id: number) => rejectBooking(id),
-    onSuccess: invalidate,
-  })
-
-  const isActing = approve.isPending || reject.isPending
+  const approve = useMutation({ mutationFn: approveBooking, onSuccess: invalidate })
+  const reject = useMutation({ mutationFn: rejectBooking, onSuccess: invalidate })
+  const handover = useMutation({ mutationFn: handoverBooking, onSuccess: invalidate })
+  const isActing = approve.isPending || reject.isPending || handover.isPending
 
   if (isLoading) return <SectionSkeleton rows={3} />
   if (isError) return <ErrorBanner message="Failed to load requests." />
-  if (bookings.length === 0)
-    return <EmptyState message="No incoming booking requests yet." />
+  if (bookings.length === 0) return <EmptyState message="No incoming booking requests yet." />
 
   return (
     <div className="space-y-2">
       {bookings.map((booking) => (
         <BookingRow key={booking.id} booking={booking}>
-          {booking.status === 'PENDING' && (
-            <div className="flex gap-2">
-              <button
-                type="button"
+          <div className="flex gap-2">
+            {booking.status === 'PENDING' && (
+              <>
+                <ActionButton
+                  onClick={() => approve.mutate(booking.id)}
+                  disabled={isActing}
+                  variant="primary"
+                >
+                  Approve
+                </ActionButton>
+                <ActionButton
+                  onClick={() => reject.mutate(booking.id)}
+                  disabled={isActing}
+                  variant="danger"
+                >
+                  Reject
+                </ActionButton>
+              </>
+            )}
+            {booking.status === 'APPROVED' && (
+              <ActionButton
+                onClick={() => handover.mutate(booking.id)}
                 disabled={isActing}
-                onClick={() => approve.mutate(booking.id)}
-                className="text-xs font-medium text-green-700 hover:text-green-900 disabled:opacity-40"
+                variant="primary"
               >
-                Approve
-              </button>
-              <button
-                type="button"
-                disabled={isActing}
-                onClick={() => reject.mutate(booking.id)}
-                className="text-xs text-rose-500 hover:text-rose-700 disabled:opacity-40"
-              >
-                Reject
-              </button>
-            </div>
-          )}
+                Mark handed over
+              </ActionButton>
+            )}
+          </div>
         </BookingRow>
       ))}
     </div>
   )
 }
 
-// ─── Shared sub-components ────────────────────────────────────────────────────
+// ─── Shared ───────────────────────────────────────────────────────────────────
 
-function BookingRow({
-  booking,
-  children,
-}: {
-  booking: Booking
-  children?: React.ReactNode
-}) {
+function BookingRow({ booking, children }: { booking: Booking; children?: React.ReactNode }) {
+  // Reuse the same query key as ItemDetailPage — served from cache if already visited.
+  const { data: item } = useQuery({
+    queryKey: ['item', String(booking.itemId)],
+    queryFn: () => fetchItem(booking.itemId).then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
+  })
+
   return (
     <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4">
       <div className="min-w-0 flex-1">
         <Link
           to={`/items/${booking.itemId}`}
-          className="text-sm font-medium text-slate-900 hover:underline"
+          className="block truncate text-sm font-medium text-slate-900 hover:underline"
         >
-          Item #{booking.itemId}
+          {item?.title ?? `Item #${booking.itemId}`}
         </Link>
         <p className="mt-0.5 text-xs text-slate-500">
           {formatDate(booking.dateFrom)} → {formatDate(booking.dateTo)}
@@ -339,13 +335,35 @@ function BookingRow({
   )
 }
 
+// Small text-button used for booking actions — not worth a full Button variant.
+function ActionButton({
+  variant,
+  children,
+  ...rest
+}: {
+  variant: 'primary' | 'danger'
+  children: React.ReactNode
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      className={`text-xs font-medium disabled:opacity-40 ${
+        variant === 'danger'
+          ? 'text-rose-500 hover:text-rose-700'
+          : 'text-green-700 hover:text-green-900'
+      }`}
+      {...rest}
+    >
+      {children}
+    </button>
+  )
+}
+
 function StatusBadge({ published }: { published: boolean }) {
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-        published
-          ? 'bg-green-50 text-green-700'
-          : 'bg-slate-100 text-slate-500'
+        published ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'
       }`}
     >
       {published ? 'Published' : 'Draft'}
@@ -353,32 +371,7 @@ function StatusBadge({ published }: { published: boolean }) {
   )
 }
 
-const bookingBadgeStyles: Record<BookingStatus, string> = {
-  PENDING: 'bg-yellow-50 text-yellow-700',
-  APPROVED: 'bg-blue-50 text-blue-700',
-  REJECTED: 'bg-red-50 text-red-600',
-  ACTIVE: 'bg-green-50 text-green-700',
-  COMPLETED: 'bg-slate-100 text-slate-600',
-  CANCELLED: 'bg-slate-100 text-slate-400',
-}
-
-function BookingBadge({ status }: { status: BookingStatus }) {
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${bookingBadgeStyles[status]}`}
-    >
-      {status.charAt(0) + status.slice(1).toLowerCase()}
-    </span>
-  )
-}
-
-function EmptyState({
-  message,
-  children,
-}: {
-  message: string
-  children?: React.ReactNode
-}) {
+function EmptyState({ message, children }: { message: string; children?: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center">
       <p className="text-sm text-slate-500">{message}</p>
@@ -405,16 +398,6 @@ function SectionSkeleton({ rows }: { rows: number }) {
   )
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function canCancel(status: BookingStatus) {
   return status === 'PENDING' || status === 'APPROVED'
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }

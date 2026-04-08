@@ -8,9 +8,9 @@ import {
   hideAdminItem,
   unbanUser,
 } from '../../shared/api/admin'
-import { getErrorMessage } from '../../shared/api/client'
+import { BookingBadge } from '../../shared/components/booking-badge'
 import { Button } from '../../shared/components/button'
-import type { BookingStatus } from '../../shared/api/types'
+import { formatDate } from '../../shared/utils/format'
 import type { AdminItem, AdminUser } from '../../shared/api/admin'
 
 export function AdminPage() {
@@ -325,25 +325,6 @@ function BookingsSection() {
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
 
-const bookingBadgeStyles: Record<BookingStatus, string> = {
-  PENDING: 'bg-yellow-50 text-yellow-700',
-  APPROVED: 'bg-blue-50 text-blue-700',
-  REJECTED: 'bg-red-50 text-red-600',
-  ACTIVE: 'bg-green-50 text-green-700',
-  COMPLETED: 'bg-slate-100 text-slate-600',
-  CANCELLED: 'bg-slate-100 text-slate-400',
-}
-
-function BookingBadge({ status }: { status: BookingStatus }) {
-  return (
-    <span
-      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${bookingBadgeStyles[status]}`}
-    >
-      {status.charAt(0) + status.slice(1).toLowerCase()}
-    </span>
-  )
-}
-
 function TableSkeleton({ rows }: { rows: number }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -378,11 +359,4 @@ function ErrorBanner({ message }: { message: string }) {
       {message}
     </div>
   )
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-  })
 }
