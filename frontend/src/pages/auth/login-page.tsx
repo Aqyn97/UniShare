@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { useAuth } from '../../features/auth/use-auth'
 import { getErrorMessage } from '../../shared/api/client'
+import { Button } from '../../shared/components/button'
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -78,13 +79,9 @@ export function LoginPage() {
           </div>
         ) : null}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-        >
+        <Button type="submit" loading={isSubmitting} className="w-full py-3">
           {isSubmitting ? 'Signing in...' : 'Sign in'}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-6 text-sm text-slate-600">
