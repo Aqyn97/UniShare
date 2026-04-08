@@ -9,6 +9,7 @@ import { RegisterPage } from './pages/auth/register-page'
 import { DashboardPage } from './pages/dashboard/dashboard-page'
 import { HomePage } from './pages/home/home-page'
 import { CreateItemPage } from './pages/items/create-item-page'
+import { EditItemPage } from './pages/items/edit-item-page'
 import { ItemDetailPage } from './pages/items/item-detail-page'
 import { NotFoundPage } from './pages/not-found/not-found-page'
 
@@ -155,6 +156,14 @@ function App() {
           element={
             <ProtectedRoute>
               <CreateItemPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="items/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditItemPage />
             </ProtectedRoute>
           }
         />
