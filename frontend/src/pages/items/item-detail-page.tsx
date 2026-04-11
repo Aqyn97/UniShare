@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../features/auth/use-auth'
 import { createBooking, fetchMyBookings } from '../../shared/api/bookings'
-import { fetchItem } from '../../shared/api/items'
+import { fetchItem, hideItem, publishItem } from '../../shared/api/items'
 import { createReview, fetchItemReviews } from '../../shared/api/reviews'
 import { getErrorMessage } from '../../shared/api/client'
 import { Button } from '../../shared/components/button'
@@ -491,6 +491,13 @@ function BookingForm({
 // ─── Owner controls ───────────────────────────────────────────────────────────
 
 function OwnerControls({ itemId, published }: { itemId: number; published: boolean }) {
+  const qc = useQueryClient()
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['item', String(itemId)] })
+
+  const publish = useMutation({ mutationFn: () => publishItem(itemId), onSuccess: invalidate })
+  const hide = useMutation({ mutationFn: () => hideItem(itemId), onSuccess: invalidate })
+  const isActing = publish.isPending || hide.isPending
+
   return (
     <div className="sticky top-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -498,18 +505,36 @@ function OwnerControls({ itemId, published }: { itemId: number; published: boole
       </p>
       <p className="mb-5 text-sm text-slate-600">
         Status:{' '}
-        <span className={published ? 'font-medium text-green-600' : 'font-medium text-slate-500'}>
-          {published ? 'Published' : 'Draft'}
+        <span className={published ? 'font-medium text-green-600' : 'font-medium text-amber-600'}>
+          {published ? 'Published' : 'Draft — not visible to others'}
         </span>
       </p>
       <div className="space-y-2">
+        {published ? (
+          <Button
+            variant="secondary"
+            className="w-full"
+            loading={isActing}
+            onClick={() => hide.mutate()}
+          >
+            Unpublish
+          </Button>
+        ) : (
+          <Button
+            className="w-full"
+            loading={isActing}
+            onClick={() => publish.mutate()}
+          >
+            Publish listing
+          </Button>
+        )}
         <Link to={`/items/${itemId}/edit`}>
           <Button variant="secondary" className="w-full">
             Edit listing
           </Button>
         </Link>
         <Link to="/dashboard">
-          <Button className="w-full">Go to dashboard</Button>
+          <Button variant="secondary" className="w-full">Go to dashboard</Button>
         </Link>
       </div>
     </div>

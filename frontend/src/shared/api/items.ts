@@ -30,7 +30,7 @@ export function hideItem(id: number) {
 }
 
 export function attachItemImage(id: number, publicId: string, url: string) {
-  return apiClient.post<Item[]>(`/items/${id}/images`, { publicId, url })
+  return apiClient.post(`/items/${id}/images`, { publicId, url })
 }
 
 export function deleteItemImage(itemId: number, imageId: number) {
