@@ -37,7 +37,7 @@ export function RegisterPage() {
 
     try {
       await registerUser(values)
-      navigate('/dashboard', { replace: true })
+      navigate('/', { replace: true })
     } catch (error) {
       setSubmitError(getErrorMessage(error))
     }
