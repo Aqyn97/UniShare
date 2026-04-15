@@ -1,77 +1,82 @@
 # UniShare
 
-A campus peer-to-peer rental marketplace. Students list items, others book them, and everyone leaves reviews after completed rentals.
+UniShare is a full-stack campus rental marketplace where students can list items, book them, and manage rentals in one place.
 
-Built for a university environment where trust matters — accounts are managed, users can be moderated, and the booking lifecycle is explicit (request → approve → handover → return).
+## Problem Statement
 
----
+Students often need short-term access to textbooks, tools, electronics, and other useful items, but buying them outright is expensive and wasteful. UniShare solves this by giving students a trusted campus-focused platform to share, rent, and review items inside their community.
 
 ## Features
 
-- **Auth** — register, login, token-based sessions, role/permission system
-- **Listings** — create, edit, publish/hide items with image support (Cloudinary)
-- **Bookings** — full lifecycle: PENDING → APPROVED → ACTIVE → COMPLETED (or REJECTED / CANCELLED)
-- **Reviews** — leave a review after a completed booking; displayed on item pages with average rating
-- **Dashboard** — manage your listings and track bookings as both renter and owner
-- **Admin panel** — platform stats, user ban/unban, item moderation
+- User registration and login with session-based authentication
+- Browse, search, and filter item listings by category
+- Create, edit, publish, hide, and delete listings
+- Upload and manage listing images
+- Booking lifecycle management: request, approve, reject, hand over, return, and cancel
+- Reviews for completed rentals
+- Personal dashboard for listings and bookings
+- Admin panel for user moderation, item moderation, and platform statistics
+- Swagger / OpenAPI documentation for backend endpoints
 
----
+## Project Structure
 
-## Stack
+```text
+.
+├── src/                # Spring Boot backend source
+├── frontend/           # React + Vite frontend
+├── docs/               # Repository docs and API collection
+├── tests/              # Reserved for future repository-level tests
+├── assets/             # Screenshots and shared media
+├── build.gradle
+├── docker-compose.yml
+└── README.md
+```
 
-**Backend**
-- Java 21, Spring Boot 3
-- PostgreSQL + Flyway migrations
-- Spring Security (token-based, stateless)
-- Cloudinary for image storage
-
-**Frontend**
-- React 19, TypeScript, Vite
-- React Router v7, TanStack Query v5
-- Tailwind CSS v4
-- React Hook Form + Zod
-
----
-
-## Running locally
+## Installation
 
 ### Prerequisites
 
-- Java 21+
-- Node.js 18+
-- Docker (for the database)
+- Java 17
+- Node.js 18+ and npm
+- Docker Desktop or local PostgreSQL
 
-### 1. Start the database
-
-```bash
-docker-compose up -d
-```
-
-This starts a PostgreSQL instance on port `5433` with database `pm_project_db`.
-
-### 2. Backend
+### 1. Clone the repository
 
 ```bash
-./gradlew bootRun
+git clone https://github.com/Aqyn97/UniShare.git
+cd PMProject
 ```
 
-The API runs on `http://localhost:8080`. Flyway runs migrations automatically on startup.
+### 2. Start the database
 
-To override database credentials or add Cloudinary config, create a `.env` file in the project root:
-
+```bash
+docker compose up -d
 ```
+
+This starts PostgreSQL on `localhost:5433`.
+
+### 3. Configure environment variables (optional)
+
+Create a root `.env` file only if you want to override the defaults or enable Cloudinary uploads:
+
+```env
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5433/pm_project_db
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=postgres
-
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-Image upload works without Cloudinary configured — items just won't have images.
+### 4. Run the backend
 
-### 3. Frontend
+```bash
+./gradlew bootRun
+```
+
+The backend runs on `http://localhost:8080`.
+
+### 5. Run the frontend
 
 ```bash
 cd frontend
@@ -79,35 +84,33 @@ npm install
 npm run dev
 ```
 
-The app runs on `http://localhost:5173` and proxies `/api/*` to the backend automatically.
+The frontend runs on `http://localhost:5173`.
 
----
+## Usage
 
-## Environment variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5433/pm_project_db` | Database URL |
-| `SPRING_DATASOURCE_USERNAME` | `postgres` | DB username |
-| `SPRING_DATASOURCE_PASSWORD` | `postgres` | DB password |
-| `CLOUDINARY_CLOUD_NAME` | — | Cloudinary cloud name |
-| `CLOUDINARY_API_KEY` | — | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | — | Cloudinary API secret |
-| `VITE_API_URL` | `/api` (proxied) | Frontend API base URL (production only) |
-
----
+1. Open the frontend in your browser.
+2. Register a new account or sign in.
+3. Browse available listings from the home page.
+4. Filter listings by keyword or category.
+5. Create your own listing from the dashboard.
+6. Send booking requests and manage rental activity.
+7. Open the admin panel if your account has admin access.
 
 ## Screenshots
 
-_TODO: add screenshots of home page, item detail, dashboard, admin panel_
+No screenshots have been added yet. If needed, place them in `assets/` and reference them here.
 
----
+## Technology Stack
 
-## What's missing / future work
+- Backend: Java 17, Spring Boot, Spring Security, Spring Data JPA, Flyway
+- Database: PostgreSQL
+- API Docs: Springdoc OpenAPI / Swagger UI
+- Frontend: React, TypeScript, Vite, React Router
+- Frontend Data Layer: Axios, TanStack Query, React Hook Form, Zod
+- Styling: Tailwind CSS
+- Tooling: Gradle, npm, Docker Compose
 
-- Item search is basic — no full-text ranking or relevance sorting
-- Booking item titles are fetched per-row on the dashboard (N+1); worth a batch endpoint
-- No email notifications for booking status changes
-- No user profile pages — owner info on listings is currently just a user ID
-- Mobile image upload not tested end-to-end
-- No test coverage on the frontend
+## API and Docs
+
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- Postman collection: `docs/api/unishare-postman-collection.json`
