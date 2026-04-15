@@ -38,6 +38,14 @@ out/
 
 # Secrets / local overrides
 .env
+frontend/.env
+frontend/.env.local
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
 
 # macOS
 .DS_Store
