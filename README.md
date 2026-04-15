@@ -43,7 +43,7 @@ Students often need short-term access to textbooks, tools, electronics, and othe
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Aqyn97/UniShare.git
 cd PMProject
 ```
 
