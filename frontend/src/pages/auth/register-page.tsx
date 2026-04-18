@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { useAuth } from '../../features/auth/use-auth'
 import { getErrorMessage } from '../../shared/api/client'
 import { Button } from '../../shared/components/button'
+import { AuthCard } from './auth-card'
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -36,23 +37,27 @@ export function RegisterPage() {
     setSubmitError(null)
 
     try {
-      await registerUser(values)
-      navigate('/', { replace: true })
+      const response = await registerUser(values)
+      navigate(`/check-email?email=${encodeURIComponent(response.email ?? values.email)}`, { replace: true })
     } catch (error) {
       setSubmitError(getErrorMessage(error))
     }
   })
 
   return (
-    <section className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-      <div className="mb-8">
-        <p className="text-sm font-medium text-slate-500">Join UniShare</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Create account</h1>
-        <p className="mt-3 text-sm text-slate-600">
-          Create your profile to list items, request rentals, and participate in the campus sharing community.
-        </p>
-      </div>
-
+    <AuthCard
+      eyebrow="Join UniShare"
+      title="Create account"
+      description="Create your profile to list items, request rentals, and participate in the campus sharing community."
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link to="/login" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
+            Sign in
+          </Link>
+        </>
+      }
+    >
       <form className="space-y-5" onSubmit={onSubmit}>
         <label className="block">
           <span className="mb-2 block text-sm font-medium text-slate-700">Username</span>
@@ -96,13 +101,6 @@ export function RegisterPage() {
           {isSubmitting ? 'Creating account...' : 'Create account'}
         </Button>
       </form>
-
-      <p className="mt-6 text-sm text-slate-600">
-        Already have an account?{' '}
-        <Link to="/login" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
-          Sign in
-        </Link>
-      </p>
-    </section>
+    </AuthCard>
   )
 }

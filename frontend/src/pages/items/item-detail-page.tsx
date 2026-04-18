@@ -7,7 +7,7 @@ import { fetchItem, hideItem, publishItem } from '../../shared/api/items'
 import { createReview, fetchItemReviews } from '../../shared/api/reviews'
 import { getErrorMessage } from '../../shared/api/client'
 import { Button } from '../../shared/components/button'
-import type { Booking, Review } from '../../shared/api/types'
+import type { Review } from '../../shared/api/types'
 
 export function ItemDetailPage() {
   const { id } = useParams<{ id: string }>()

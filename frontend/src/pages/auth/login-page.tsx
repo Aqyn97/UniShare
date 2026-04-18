@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { useAuth } from '../../features/auth/use-auth'
 import { getErrorMessage } from '../../shared/api/client'
 import { Button } from '../../shared/components/button'
+import { AuthCard } from './auth-card'
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -42,15 +43,19 @@ export function LoginPage() {
   })
 
   return (
-    <section className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-      <div className="mb-8">
-        <p className="text-sm font-medium text-slate-500">Welcome to UniShare</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Sign in</h1>
-        <p className="mt-3 text-sm text-slate-600">
-          Sign in with your student account to access the secure campus rental marketplace.
-        </p>
-      </div>
-
+    <AuthCard
+      eyebrow="Welcome to UniShare"
+      title="Sign in"
+      description="Sign in with your student account to access the secure campus rental marketplace."
+      footer={
+        <>
+          No account yet?{' '}
+          <Link to="/register" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
+            Create one
+          </Link>
+        </>
+      }
+    >
       <form className="space-y-5" onSubmit={onSubmit}>
         <label className="block">
           <span className="mb-2 block text-sm font-medium text-slate-700">Username</span>
@@ -73,6 +78,21 @@ export function LoginPage() {
           {errors.password ? <span className="mt-2 block text-sm text-rose-600">{errors.password.message}</span> : null}
         </label>
 
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <Link
+            to="/forgot-password"
+            className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 hover:text-slate-950"
+          >
+            Forgot password?
+          </Link>
+          <Link
+            to="/check-email"
+            className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 hover:text-slate-950"
+          >
+            Resend confirmation
+          </Link>
+        </div>
+
         {submitError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {submitError}
@@ -83,13 +103,6 @@ export function LoginPage() {
           {isSubmitting ? 'Signing in...' : 'Sign in'}
         </Button>
       </form>
-
-      <p className="mt-6 text-sm text-slate-600">
-        No account yet?{' '}
-        <Link to="/register" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
-          Create one
-        </Link>
-      </p>
-    </section>
+    </AuthCard>
   )
 }

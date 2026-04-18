@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { CurrentUser, LoginRequest, RegisterRequest } from '../../shared/api/types'
+import type { CurrentUser, LoginRequest, RegisterRequest, RegisterResponse } from '../../shared/api/types'
 
 export interface AuthContextValue {
   user: CurrentUser | null
@@ -8,7 +8,7 @@ export interface AuthContextValue {
   isAdmin: boolean
   isLoading: boolean
   login: (payload: LoginRequest) => Promise<void>
-  register: (payload: RegisterRequest) => Promise<void>
+  register: (payload: RegisterRequest) => Promise<RegisterResponse>
   logout: () => void
   refreshCurrentUser: () => Promise<void>
 }

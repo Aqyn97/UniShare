@@ -9,20 +9,33 @@ export interface RegisterRequest {
   password: string
 }
 
+export interface EmailRequest {
+  email: string
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  password: string
+}
+
 export interface AuthTokenResponse {
   token: string
 }
 
-export interface RegisterResponse extends AuthTokenResponse {
+export interface ApiMessageResponse {
   message: string
-  username: string
-  email: string
+  email?: string
+}
+
+export interface RegisterResponse extends ApiMessageResponse {
+  requiresEmailVerification: boolean
 }
 
 export interface CurrentUser {
   userId: number
   username: string
   email: string | null
+  emailVerified: boolean
   enabled: boolean
   roles: string[]
   permissions: string[]

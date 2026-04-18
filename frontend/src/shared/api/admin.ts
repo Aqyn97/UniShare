@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { Booking, BookingStatus } from './types'
+import type { Booking } from './types'
 
 export interface AdminUser {
   userId: number

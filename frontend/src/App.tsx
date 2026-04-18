@@ -4,8 +4,12 @@ import { Link, NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import { AdminRoute, ProtectedRoute } from './features/auth/route-guards'
 import { useAuth } from './features/auth/use-auth'
 import { AdminPage } from './pages/admin/admin-page'
+import { CheckEmailPage } from './pages/auth/check-email-page'
+import { ForgotPasswordPage } from './pages/auth/forgot-password-page'
 import { LoginPage } from './pages/auth/login-page'
 import { RegisterPage } from './pages/auth/register-page'
+import { ResetPasswordPage } from './pages/auth/reset-password-page'
+import { VerifyEmailPage } from './pages/auth/verify-email-page'
 import { DashboardPage } from './pages/dashboard/dashboard-page'
 import { HomePage } from './pages/home/home-page'
 import { CreateItemPage } from './pages/items/create-item-page'
@@ -211,6 +215,38 @@ function App() {
           element={
             <GuestOnlyRoute>
               <RegisterPage />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="check-email"
+          element={
+            <GuestOnlyRoute>
+              <CheckEmailPage />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="verify-email"
+          element={
+            <GuestOnlyRoute>
+              <VerifyEmailPage />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="forgot-password"
+          element={
+            <GuestOnlyRoute>
+              <ForgotPasswordPage />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="reset-password"
+          element={
+            <GuestOnlyRoute>
+              <ResetPasswordPage />
             </GuestOnlyRoute>
           }
         />

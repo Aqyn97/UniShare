@@ -30,6 +30,10 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
     @Column(columnDefinition = "boolean default true")
     private boolean enabled = true;
 
@@ -56,5 +60,6 @@ public class User {
     )
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
 }

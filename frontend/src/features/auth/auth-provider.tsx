@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { fetchCurrentUser, loginRequest, registerRequest } from '../../shared/api/auth'
-import type { CurrentUser, LoginRequest, RegisterRequest } from '../../shared/api/types'
+import type { CurrentUser, LoginRequest, RegisterRequest, RegisterResponse } from '../../shared/api/types'
 import { AuthContext, type AuthContextValue } from './auth-context'
 import { clearStoredToken, getStoredToken, setStoredToken } from './storage'
 
@@ -75,10 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(data.token)
   }, [])
 
-  const register = useCallback(async (payload: RegisterRequest) => {
+  const register = useCallback(async (payload: RegisterRequest): Promise<RegisterResponse> => {
     const { data } = await registerRequest(payload)
-    setStoredToken(data.token)
-    setToken(data.token)
+    return data
   }, [])
 
   const value = useMemo<AuthContextValue>(

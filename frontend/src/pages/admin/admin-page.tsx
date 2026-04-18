@@ -9,7 +9,6 @@ import {
   unbanUser,
 } from '../../shared/api/admin'
 import { BookingBadge } from '../../shared/components/booking-badge'
-import { Button } from '../../shared/components/button'
 import { formatDate } from '../../shared/utils/format'
 import type { AdminItem, AdminUser } from '../../shared/api/admin'
 

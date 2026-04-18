@@ -11,7 +11,6 @@ import {
   returnBooking,
 } from '../../shared/api/bookings'
 import { deleteItem, fetchItem, fetchItems, hideItem, publishItem } from '../../shared/api/items'
-import { getErrorMessage } from '../../shared/api/client'
 import { BookingBadge } from '../../shared/components/booking-badge'
 import { Button } from '../../shared/components/button'
 import { formatDate } from '../../shared/utils/format'
