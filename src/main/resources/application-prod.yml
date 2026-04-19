@@ -1,0 +1,71 @@
+# application-prod.yml
+# Activated by SPRING_PROFILES_ACTIVE=prod on Railway.
+# All values must come from Railway environment variables.
+# Do NOT hardcode secrets here.
+
+spring:
+  datasource:
+    # Railway Postgres plugin injects PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD.
+    # Verify these appear under your Railway project → Variables tab after adding the plugin.
+    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db.migration
+
+  mail:
+    host: ${SPRING_MAIL_HOST:}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+cloudinary:
+  cloudName: ${CLOUDINARY_CLOUD_NAME}
+  apiKey: ${CLOUDINARY_API_KEY}
+  apiSecret: ${CLOUDINARY_API_SECRET}
+
+app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  auth:
+    frontend-base-url: ${APP_AUTH_FRONTEND_BASE_URL}
+    # NOTE: Change APP_AUTH_MAIL_MODE to "send" and configure SPRING_MAIL_* vars
+    # when email verification and password-reset features are fully implemented.
+    mail-mode: ${APP_AUTH_MAIL_MODE:log}
+    mail-from: ${APP_AUTH_MAIL_FROM:no-reply@unishare.local}
+    verification-ttl-hours: ${APP_AUTH_VERIFICATION_TTL_HOURS:24}
+    password-reset-ttl-minutes: ${APP_AUTH_PASSWORD_RESET_TTL_MINUTES:30}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: WARN
+    kz.pmproject: INFO
+    org.flywaydb: INFO
