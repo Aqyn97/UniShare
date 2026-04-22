@@ -14,4 +14,10 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    // Railway injects PORT — used when running `vite preview` in the container
+    port: Number(process.env.PORT) || 4173,
+    host: '0.0.0.0',
+    allowedHosts: true,
+  },
 })
