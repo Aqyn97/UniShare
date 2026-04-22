@@ -39,12 +39,14 @@ spring:
             enable: true
 
 cloudinary:
-  cloudName: ${CLOUDINARY_CLOUD_NAME}
-  apiKey: ${CLOUDINARY_API_KEY}
-  apiSecret: ${CLOUDINARY_API_SECRET}
+  cloudName: ${CLOUDINARY_CLOUD_NAME:}
+  apiKey: ${CLOUDINARY_API_KEY:}
+  apiSecret: ${CLOUDINARY_API_SECRET:}
 
 app:
   cors:
+    # Set this in Railway Variables to your frontend URL, e.g.:
+    # https://unishare-frontend-production.up.railway.app
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
   auth:
     frontend-base-url: ${APP_AUTH_FRONTEND_BASE_URL}
