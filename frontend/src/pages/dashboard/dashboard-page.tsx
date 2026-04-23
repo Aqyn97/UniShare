@@ -71,7 +71,8 @@ function MyListings({ userId }: { userId: number }) {
     queryFn: () => fetchItems({ ownerId: userId, size: 100 }).then((r) => r.data),
   })
 
-  const items = data?.content ?? []
+  // Guard: only show items that actually belong to this user (defence against stale cache)
+  const items = (data?.content ?? []).filter((item) => item.ownerId === userId)
   const invalidate = () => qc.invalidateQueries({ queryKey: ['my-items'] })
 
   const publish = useMutation({ mutationFn: (id: number) => publishItem(id), onSuccess: invalidate })

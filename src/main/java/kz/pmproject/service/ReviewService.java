@@ -105,7 +105,7 @@ public class ReviewService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        user.setRatingAvg(BigDecimal.valueOf(reviews.isEmpty() ? null : Math.round(avg * 100.0) / 100.0));
+        user.setRatingAvg(reviews.isEmpty() ? null : BigDecimal.valueOf(Math.round(avg * 100.0) / 100.0));
         user.setRatingCount(reviews.size());
         userRepository.save(user);
     }

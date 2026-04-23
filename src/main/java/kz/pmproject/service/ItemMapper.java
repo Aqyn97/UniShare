@@ -14,6 +14,7 @@ public class ItemMapper {
         return ItemResponse.builder()
                 .id(item.getId())
                 .ownerId(item.getOwner().getId())
+                .ownerUsername(item.getOwner().getUsername())
                 .categoryId(item.getCategory() == null ? null : item.getCategory().getId())
                 .categoryName(item.getCategory() == null ? null : item.getCategory().getName())
                 .title(item.getTitle())

@@ -284,6 +284,7 @@ function ItemCard({ item }: { item: Item }) {
         ) : (
           <p className="mt-3 text-sm text-slate-400">Price on request</p>
         )}
+        <p className="mt-2 text-xs text-slate-400">by {item.ownerUsername}</p>
       </div>
     </Link>
   )
