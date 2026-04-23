@@ -36,5 +36,10 @@ public final class ItemSpecs {
                 cb.like(cb.lower(root.get("description")), like)
         );
     }
+
+    public static Specification<Item> ownerOf(Long ownerId) {
+        if (ownerId == null) return null;
+        return (root, query, cb) -> cb.equal(root.get("owner").get("id"), ownerId);
+    }
 }
 

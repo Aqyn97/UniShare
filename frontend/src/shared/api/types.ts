@@ -103,6 +103,7 @@ export interface ItemUpdateRequest {
 export interface ItemsQuery {
   q?: string
   categoryId?: number
+  ownerId?: number
   minPrice?: number
   maxPrice?: number
   published?: boolean

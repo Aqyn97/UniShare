@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { fetchCurrentUser, loginRequest, registerRequest } from '../../shared/api/auth'
+import { fetchCurrentUser, loginRequest, logoutRequest, registerRequest } from '../../shared/api/auth'
 import type { CurrentUser, LoginRequest, RegisterRequest, RegisterResponse } from '../../shared/api/types'
 import { AuthContext, type AuthContextValue } from './auth-context'
 import { clearStoredToken, getStoredToken, setStoredToken } from './storage'
@@ -24,6 +24,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   const logout = useCallback(() => {
+    logoutRequest().catch(() => {
+      // fire and forget — local state clears regardless
+    })
     clearStoredToken()
     setToken(null)
     setUser(null)

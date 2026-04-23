@@ -1,46 +1,142 @@
-## Repository Audit
+# UniShare — Code Audit
 
-**Project:** UniShare
-**Auditor:** Sultan Assimbek
-**Date:** April 16, 2026
-**Score:** 7 / 10
+**Date:** 2026-04-23  
+**Stack:** Spring Boot 3.5 / Java 17 + React 19 / TypeScript 6
 
 ---
 
-### Evaluation
+## Architecture
 
-**README Quality — 2 / 2** The README is excellent. It provides a clear problem statement, a comprehensive feature list, a defined project structure, and step-by-step installation instructions for both backend and frontend. The inclusion of the technology stack and API documentation links makes it very developer-friendly.
+| Layer | Technology |
+|---|---|
+| Backend | Spring Boot 3.5, Java 17, Spring Data JPA, Flyway, PostgreSQL 15 |
+| Auth | Stateless opaque tokens (UUID), custom TokenFilter, x-session header |
+| Image storage | Cloudinary (server-signed client-side upload) |
+| Frontend | React 19, TypeScript 6, Vite 8, TanStack Query v5, React Hook Form + Zod, Tailwind CSS v4 |
+| Routing | React Router v7 |
+| Deployment | Railway (two services), Docker multi-stage, nginx 1.27 |
 
-**Folder Structure — 2 / 2** The project follows a clean, professional monorepo layout. Separating `src/` (Spring Boot), `frontend/` (React), `docs/`, `tests/`, and `assets/` at the root level is a best practice that ensures the project remains scalable and easy to navigate.
-
-**File Naming Consistency — 1 / 2** The project generally follows standard conventions (Java uses PascalCase for classes, React uses a mix of kebab-case and PascalCase). However, there are some inconsistencies in the root files and folders. For example, `Amansdfg` appears as a folder name in the file tree, which looks like a placeholder or a mistake. Some commit messages like "little fix" are also less descriptive than the "chore:" or "fix:" prefixes used elsewhere.
-
-**Presence of Essential Files — 2 / 2** Unlike the reference project, UniShare is well-equipped:
-* **LICENSE:** MIT License is present.
-* **.gitignore:** Properly configured for a full-stack environment.
-* **Docker:** `docker-compose.yml` is present for easy database setup.
-* **Build Scripts:** `build.gradle` and Gradle wrappers are correctly placed.
-
-**Commit History Quality — 0 / 2** While the repository structure is solid, the commit history shows some "red flags" regarding professional workflow. Messages like "little fix," "fixed some bugs," and "dev2additions" are vague. Furthermore, committing changes directly to the main branch (as implied by the recent merges) without detailed pull request descriptions can make long-term maintenance difficult.
+Controllers are thin, business logic lives in services, schema versioning goes through Flyway. No structural problems. Everything below is specific and fixable.
 
 ---
 
-### Issues Found
+## Issues
 
-| Issue | Severity | Status |
-| :--- | :--- | :--- |
-| Vague Commit Messages | 🟡 Medium | **To be improved** (Use Conventional Commits) |
-| Placeholder folders (e.g., `Amansdfg`) | 🟢 Low | **Pending** (Needs cleanup) |
-| Missing Screenshots | 🟢 Low | **Noted** (README mentions they are missing) |
-| Branching Strategy | 🟡 Medium | **Active** (Multiple contributors working on main/feature branches) |
+### Critical
+
+**C1 — Plaintext password bypass** `SecurityConfig.java:42-48`  
+The custom `PasswordEncoder.matches()` does a raw string comparison when the stored value has no BCrypt prefix. The seed admin row in `V0.0.1` has `password = 'password'` as literal text. On any production database that ran that migration and nothing else, `admin` / `password` logs in as a full admin without any hashing involved.
+
+**C2 — Password field leaking in admin API** `AdminController.java:25`, `User.java`  
+`GET /admin/users` returns the JPA entity directly. `User.password` has no `@JsonIgnore`, so every admin API call includes password hashes in the response body — and the plaintext string for the seed account. Same issue on `banUser()` and `unbanUser()`.
+
+**C3 — No logout; tokens live forever** `TokenService.java`, `OpaqueTokenRepository.java`  
+`findAllByUserIdAndRevokedFalse()` exists in the repository but is never called. There is no `POST /auth/logout`. Tokens expire after 7 days and cannot be revoked earlier. The frontend `logout()` clears localStorage but leaves the token valid on the server.
+
+**C4 — No tests**  
+`testImplementation` is in `build.gradle`, zero test files exist anywhere.
 
 ---
 
-### Post-Audit Recommendations: 8.5 / 10
+### Important
 
-To reach a near-perfect score, the team should focus on **Git hygiene**. 
-1.  **Clean up the root directory:** Remove any folders that aren't part of the standard project structure (like `Amansdfg`).
-2.  **Standardize Commits:** Use the `type(scope): description` format consistently (e.g., `feat(api): add booking approval endpoint`).
-3.  **Visual Documentation:** Add the screenshots mentioned in the README to the `assets/` folder to help users visualize the UI without running the code.
+**I1 — Stats endpoint loads all reviews into memory** `AdminService.java:91-95`  
+`reviewRepository.findAll()` then `.stream().mapToInt().average()` — a full table load to compute one number. `SELECT AVG(rating) FROM reviews` does the same thing in the database.
 
-Overall, **UniShare** is in much better shape than the "Pixel Rental" project you compared it to. It is functional, well-documented, and properly structured.
+**I2 — Dashboard filters items client-side** `dashboard-page.tsx:70-74`  
+`fetchItems({ size: 100 })` then `.filter(item => item.ownerId === userId)` in JavaScript. Anyone with more than 100 listings gets truncated results with no error or indication. Backend needs an `ownerId` param.
+
+**I3 — UserSession.java is empty** `model/user/entity/UserSession.java`  
+Package declaration and an empty class body. No references anywhere.
+
+**I4 — UserDto.java is unreachable** `model/user/dto/UserDto.java`  
+Private fields, no Lombok, no getters or setters, never imported anywhere.
+
+**I5 — Kotlin in a Java-only project** `build.gradle:6,50`, `settings.gradle:1-5`  
+The Kotlin JVM plugin and `kotlin-stdlib-jdk8` are declared. There are no `.kt` files. Unnecessary compiler + runtime overhead.
+
+**I6 — spring-boot-starter-data-jdbc unused** `build.gradle:29`  
+Project uses JPA only. Nothing calls `JdbcTemplate`.
+
+**I7 — Admin list endpoints have no pagination**  
+`getUsers()`, `getItems()`, and `getBookings()` in `AdminService` all call `findAll()` with no row limit.
+
+**I8 — ResetPasswordRequest field name mismatch**  
+Backend DTO field: `newPassword`. Frontend sends: `password`. Dormant because the endpoint throws 501, but will break on first real implementation.
+
+---
+
+### Minor
+
+**M1** — `ItemDetailPage` shows `User #123` instead of a username. `ItemResponse` DTO is missing `ownerUsername`.
+
+**M2** — Token TTL hardcoded: `LocalDateTime.now().plusDays(7)` in `TokenService.createToken()`.
+
+**M3** — `ReviewRepository.countBy()` duplicates the inherited `count()` method.
+
+**M4** — `show-sql: true` in the default `application.yml` logs every query in all environments.
+
+---
+
+## Feature status
+
+| Feature | Status | Notes |
+|---|---|---|
+| Registration | OK | Works end-to-end |
+| Login | WARN | Works, plaintext bypass exists (C1) |
+| Email verification | MISSING | All four email endpoints return 501 |
+| Password reset | MISSING | Returns 501, frontend UI exists |
+| Logout | PARTIAL | Clears localStorage only, token stays valid on server (C3) |
+| Browse / search items | OK | Pagination, filters all work |
+| Create / edit / delete listing | OK | Includes Cloudinary image upload |
+| Publish / hide listing | OK | |
+| Booking lifecycle | OK | All status transitions enforced |
+| Reviews | OK | Gated on COMPLETED booking, one per booking |
+| Admin — users | WARN | Password field in response (C2) |
+| Admin — items | OK | |
+| Admin — stats | WARN | Full table scan (I1) |
+| Dashboard — my listings | WARN | Truncates at 100 (I2) |
+| Dashboard — bookings | OK | |
+
+---
+
+## What was changed
+
+| File | Change |
+|---|---|
+| `SecurityConfig.java` | Replaced custom `PasswordEncoder` with `new BCryptPasswordEncoder()` |
+| `V0.0.7__hash_admin_password.sql` | Updates the seed admin password to a BCrypt hash |
+| `User.java` | Added `@JsonIgnore` on `password` |
+| `TokenService.java` | Added `revokeToken(String tokenValue)` |
+| `AuthController.java` | Added `POST /auth/logout` |
+| `auth.ts` | Added `logoutRequest()` |
+| `auth-provider.tsx` | `logout()` now calls the API before clearing localStorage |
+| `ReviewRepository.java` | Added `findAverageRating()` with `SELECT AVG` |
+| `AdminService.java` | `getStats()` uses the aggregate query |
+| `ItemSpecs.java` | Added `ownerOf(Long ownerId)` |
+| `ItemController.java` | Added `ownerId` filter param on `GET /items` |
+| `types.ts` | Added `ownerId` to `ItemsQuery` |
+| `dashboard-page.tsx` | Passes `ownerId: userId` to the backend |
+| `build.gradle` | Removed Kotlin plugin, `kotlin-stdlib-jdk8`, `spring-boot-starter-data-jdbc` |
+| `settings.gradle` | Removed Kotlin `pluginManagement` block |
+| `UserSession.java` | Deleted |
+| `UserDto.java` | Deleted |
+
+---
+
+## Verification
+
+```
+npm run build             → 0 errors, 231 modules
+plaintext fallback        → removed
+@JsonIgnore on password   → confirmed
+POST /auth/logout         → present, revokes token in DB
+findAverageRating() query → SELECT AVG, no findAll()
+GET /items?ownerId=X      → wired through spec + controller
+dashboard ownerId filter  → server-side, not client-side
+dead files                → deleted
+Kotlin                    → removed from build
+data-jdbc                 → removed from build
+```
+
+Still open: email verification, password reset, tests, admin pagination, token TTL config.

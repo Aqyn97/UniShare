@@ -50,4 +50,12 @@ public class TokenService {
         tokenRepo.save(t);
         return token;
     }
+
+    @Transactional
+    public void revokeToken(String tokenValue) {
+        tokenRepo.findByToken(tokenValue).ifPresent(t -> {
+            t.setRevoked(true);
+            tokenRepo.save(t);
+        });
+    }
 }

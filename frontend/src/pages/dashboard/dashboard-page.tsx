@@ -67,11 +67,11 @@ function MyListings({ userId }: { userId: number }) {
   const qc = useQueryClient()
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['my-items'],
-    queryFn: () => fetchItems({ size: 100 }).then((r) => r.data),
+    queryKey: ['my-items', userId],
+    queryFn: () => fetchItems({ ownerId: userId, size: 100 }).then((r) => r.data),
   })
 
-  const items = (data?.content ?? []).filter((item) => item.ownerId === userId)
+  const items = data?.content ?? []
   const invalidate = () => qc.invalidateQueries({ queryKey: ['my-items'] })
 
   const publish = useMutation({ mutationFn: (id: number) => publishItem(id), onSuccess: invalidate })

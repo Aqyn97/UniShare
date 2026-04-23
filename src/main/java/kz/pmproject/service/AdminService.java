@@ -4,7 +4,6 @@ import kz.pmproject.model.market.dto.AdminItemResponse;
 import kz.pmproject.model.market.dto.AdminStatsResponse;
 import kz.pmproject.model.market.entity.Booking;
 import kz.pmproject.model.market.entity.Item;
-import kz.pmproject.model.market.entity.Review;
 import kz.pmproject.model.user.entity.User;
 import kz.pmproject.repository.BookingRepository;
 import kz.pmproject.repository.ItemRepository;
@@ -88,11 +87,7 @@ public class AdminService {
         long bookingsCount = bookingRepository.count();
         long reviewsCount = reviewRepository.count();
 
-        double avg = reviewRepository.findAll()
-                .stream()
-                .mapToInt(Review::getRating)
-                .average()
-                .orElse(0.0);
+        double avg = reviewRepository.findAverageRating();
 
         return AdminStatsResponse.builder()
                 .usersCount(usersCount)
