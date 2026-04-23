@@ -11,6 +11,7 @@ import kz.pmproject.model.user.entity.Role;
 import kz.pmproject.model.user.entity.User;
 import kz.pmproject.repository.UserRepository;
 import kz.pmproject.service.AuthService;
+import kz.pmproject.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,7 +36,16 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 public class AuthController {
 
     private final AuthService authService;
+    private final TokenService tokenService;
     private final UserRepository userRepository;
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader(value = "x-session", required = false) String token) {
+        if (token != null && !token.isBlank()) {
+            tokenService.revokeToken(token);
+        }
+        return ResponseEntity.noContent().build();
+    }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {

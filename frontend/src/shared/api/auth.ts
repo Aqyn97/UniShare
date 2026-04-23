@@ -37,3 +37,7 @@ export function resetPasswordRequest(payload: ResetPasswordRequest) {
 export function fetchCurrentUser() {
   return apiClient.get<CurrentUser>('/auth/me')
 }
+
+export function logoutRequest() {
+  return apiClient.post<void>('/auth/logout')
+}

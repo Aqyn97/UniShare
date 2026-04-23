@@ -71,6 +71,7 @@ public class ItemController {
     public ResponseEntity<Page<ItemResponse>> list(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long ownerId,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean published,
@@ -82,6 +83,7 @@ public class ItemController {
 
         Specification<Item> spec = ItemSpecs.search(q);
         spec = andIfNotNull(spec, ItemSpecs.categoryId(categoryId));
+        spec = andIfNotNull(spec, ItemSpecs.ownerOf(ownerId));
         spec = andIfNotNull(spec, ItemSpecs.minPrice(minPrice));
         spec = andIfNotNull(spec, ItemSpecs.maxPrice(maxPrice));
         spec = andIfNotNull(spec, ItemSpecs.published(published));
