@@ -80,6 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (payload: RegisterRequest): Promise<RegisterResponse> => {
     const { data } = await registerRequest(payload)
+    if (data.token && !data.requiresEmailVerification) {
+      setStoredToken(data.token)
+      setToken(data.token)
+    }
     return data
   }, [])
 

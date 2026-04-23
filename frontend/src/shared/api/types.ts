@@ -28,6 +28,8 @@ export interface ApiMessageResponse {
 }
 
 export interface RegisterResponse extends ApiMessageResponse {
+  token?: string
+  username?: string
   requiresEmailVerification: boolean
 }
 

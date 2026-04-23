@@ -60,14 +60,14 @@ public class AuthService {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
-                .emailVerified(false)
+                .emailVerified(true)
                 .enabled(true)
                 .roles(Set.of(userRole))
                 .build();
 
         userRepository.save(user);
         String token = tokenService.createToken(user);
-        return Map.of("token", token, "username", user.getUsername());
+        return Map.of("token", token, "username", user.getUsername(), "requiresEmailVerification", false);
     }
 
     // TODO: Implement email verification flow (send token via email, validate on click)

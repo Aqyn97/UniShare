@@ -38,7 +38,11 @@ export function RegisterPage() {
 
     try {
       const response = await registerUser(values)
-      navigate(`/check-email?email=${encodeURIComponent(response.email ?? values.email)}`, { replace: true })
+      if (response.requiresEmailVerification) {
+        navigate(`/check-email?email=${encodeURIComponent(response.email ?? values.email)}`, { replace: true })
+      } else {
+        navigate('/dashboard', { replace: true })
+      }
     } catch (error) {
       setSubmitError(getErrorMessage(error))
     }
