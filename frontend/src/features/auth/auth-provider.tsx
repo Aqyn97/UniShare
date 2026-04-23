@@ -9,6 +9,7 @@ import { fetchCurrentUser, loginRequest, logoutRequest, registerRequest } from '
 import type { CurrentUser, LoginRequest, RegisterRequest, RegisterResponse } from '../../shared/api/types'
 import { AuthContext, type AuthContextValue } from './auth-context'
 import { clearStoredToken, getStoredToken, setStoredToken } from './storage'
+import { queryClient } from '../../main'
 
 function hasAdminPermissions(user: CurrentUser | null) {
   if (!user) {
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null)
     setUser(null)
     setIsLoading(false)
+    queryClient.clear()
   }, [])
 
   const refreshCurrentUser = useCallback(async () => {
