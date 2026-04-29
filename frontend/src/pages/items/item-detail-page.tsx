@@ -39,6 +39,8 @@ export function ItemDetailPage() {
   }
 
   const isOwner = user?.userId === item.ownerId
+  const ownerName = item.ownerUsername?.trim() || `User #${item.ownerId}`
+  const ownerBadge = ownerName.slice(0, 2).toUpperCase()
 
   return (
     <div className="space-y-10">
@@ -79,11 +81,11 @@ export function ItemDetailPage() {
 
           <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
-              {item.ownerId}
+              {ownerBadge}
             </div>
             <div>
               <p className="text-xs text-slate-500">Listed by</p>
-              <p className="text-sm font-medium text-slate-900">User #{item.ownerId}</p>
+              <p className="text-sm font-medium text-slate-900">{ownerName}</p>
             </div>
           </div>
         </div>

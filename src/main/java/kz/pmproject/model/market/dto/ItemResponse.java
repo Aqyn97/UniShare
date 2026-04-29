@@ -12,6 +12,7 @@ import java.util.List;
 public class ItemResponse {
     private Long id;
     private Long ownerId;
+    private String ownerUsername;
     private Long categoryId;
     private String categoryName;
     private String title;

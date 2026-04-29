@@ -72,6 +72,7 @@ export interface ItemImage {
 export interface Item {
   id: number
   ownerId: number
+  ownerUsername: string
   categoryId: number | null
   categoryName: string | null
   title: string
