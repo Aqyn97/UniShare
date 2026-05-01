@@ -86,7 +86,12 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-        sendVerificationEmail(user);
+
+        try {
+            sendVerificationEmail(user);
+        } catch (Exception e) {
+            System.out.println("Verification email sending failed: " + e.getMessage());
+        }
 
         return Map.of(
                 "message", "Account created. Please check your email to confirm it before signing in.",

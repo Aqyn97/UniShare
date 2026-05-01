@@ -61,13 +61,17 @@ public class AuthMailService {
 
     private void send(String to, String subject, String body) {
         if ("smtp".equalsIgnoreCase(authProperties.getMailMode())) {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(authProperties.getMailFrom());
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(body);
-            javaMailSender.send(message);
-            return;
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(authProperties.getMailFrom());
+                message.setTo(to);
+                message.setSubject(subject);
+                message.setText(body);
+                javaMailSender.send(message);
+                return;
+            } catch (Exception e) {
+                log.error("Failed to send auth email to {}: {}", to, e.getMessage());
+            }
         }
 
         log.info("Auth email [{}] to {}:\n{}", subject, to, body);
