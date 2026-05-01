@@ -5,11 +5,10 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { fetchCurrentUser, loginRequest, logoutRequest, registerRequest } from '../../shared/api/auth'
+import { fetchCurrentUser, loginRequest, registerRequest } from '../../shared/api/auth'
 import type { CurrentUser, LoginRequest, RegisterRequest, RegisterResponse } from '../../shared/api/types'
 import { AuthContext, type AuthContextValue } from './auth-context'
 import { clearStoredToken, getStoredToken, setStoredToken } from './storage'
-import { queryClient } from '../../main'
 
 function hasAdminPermissions(user: CurrentUser | null) {
   if (!user) {
@@ -25,14 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   const logout = useCallback(() => {
-    logoutRequest().catch(() => {
-      // fire and forget — local state clears regardless
-    })
     clearStoredToken()
     setToken(null)
     setUser(null)
     setIsLoading(false)
-    queryClient.clear()
   }, [])
 
   const refreshCurrentUser = useCallback(async () => {
@@ -82,10 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (payload: RegisterRequest): Promise<RegisterResponse> => {
     const { data } = await registerRequest(payload)
-    if (data.token && !data.requiresEmailVerification) {
-      setStoredToken(data.token)
-      setToken(data.token)
-    }
     return data
   }, [])
 

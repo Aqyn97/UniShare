@@ -14,10 +14,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
-        format_sql: false
+        format_sql: true
 
   flyway:
     enabled: true
@@ -26,24 +26,25 @@ spring:
     locations: 'classpath:db.migration'
 
   mail:
-    host: ${SPRING_MAIL_HOST:}
-    port: ${SPRING_MAIL_PORT:587}
-    username: ${SPRING_MAIL_USERNAME:}
+    host: ${SPRING_MAIL_HOST:smtp.resend.com}
+    port: ${SPRING_MAIL_PORT:465}
+    username: ${SPRING_MAIL_USERNAME:resend}
     password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:true}
+          auth: true
           starttls:
-            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:true}
+            enable: false
+          ssl:
+            enable: true
 
 logging:
   level:
     org.flywaydb: INFO
 
 server:
-  port: ${PORT:8080}
-  address: 0.0.0.0
+  port: 8080
 
 cloudinary:
   cloudName: ${CLOUDINARY_CLOUD_NAME:}

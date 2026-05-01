@@ -6,7 +6,7 @@ import App from './App'
 import { AuthProvider } from './features/auth/auth-provider'
 import './index.css'
 
-export const queryClient = new QueryClient()
+const queryClient = new QueryClient()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

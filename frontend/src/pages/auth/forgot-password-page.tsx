@@ -8,64 +8,47 @@ import { getErrorMessage } from '../../shared/api/client'
 import { Button } from '../../shared/components/button'
 import { AuthCard } from './auth-card'
 
-const schema = z.object({
+const forgotPasswordSchema = z.object({
   email: z.string().email('Enter a valid email'),
 })
 
-type FormData = z.infer<typeof schema>
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 
 export function ForgotPasswordPage() {
-  const [success, setSuccess] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { email: '' },
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: '',
+    },
   })
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null)
+
     try {
-      await forgotPasswordRequest(values)
-      setSuccess(true)
+      const { data } = await forgotPasswordRequest(values)
+      setSuccessMessage(data.message)
     } catch (error) {
       setSubmitError(getErrorMessage(error))
     }
   })
 
-  if (success) {
-    return (
-      <AuthCard
-        eyebrow="UniShare"
-        title="Check your email"
-        description="If an account exists for that address, you'll receive a password reset link shortly."
-        footer={
-          <Link to="/login" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
-            Back to sign in
-          </Link>
-        }
-      >
-        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          Reset email sent. Check your inbox.
-        </div>
-      </AuthCard>
-    )
-  }
-
   return (
     <AuthCard
-      eyebrow="UniShare"
-      title="Forgot password"
-      description="Enter your email and we'll send you a link to reset your password."
+      eyebrow="Password recovery"
+      title="Reset your password"
+      description="Enter the email connected to your UniShare account. If it exists, we will send a secure reset link."
       footer={
         <>
-          Remember it?{' '}
+          Remembered your password?{' '}
           <Link to="/login" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
-            Sign in
+            Back to sign in
           </Link>
         </>
       }
@@ -82,6 +65,12 @@ export function ForgotPasswordPage() {
           {errors.email ? <span className="mt-2 block text-sm text-rose-600">{errors.email.message}</span> : null}
         </label>
 
+        {successMessage ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {successMessage}
+          </div>
+        ) : null}
+
         {submitError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {submitError}
@@ -89,7 +78,7 @@ export function ForgotPasswordPage() {
         ) : null}
 
         <Button type="submit" loading={isSubmitting} className="w-full py-3">
-          {isSubmitting ? 'Sending...' : 'Send reset link'}
+          {isSubmitting ? 'Sending reset link...' : 'Send reset link'}
         </Button>
       </form>
     </AuthCard>

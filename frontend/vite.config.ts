@@ -5,7 +5,10 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+
   server: {
+    host: true,
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -14,10 +17,9 @@ export default defineConfig({
       },
     },
   },
+
   preview: {
-    // Railway injects PORT — used when running `vite preview` in the container
-    port: Number(process.env.PORT) || 4173,
-    host: '0.0.0.0',
+    host: true,
     allowedHosts: true,
   },
 })

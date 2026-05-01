@@ -1,36 +1,32 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 
 interface AuthCardProps {
   eyebrow: string
   title: string
   description: string
-  footer?: ReactNode
   children: ReactNode
+  footer?: ReactNode
 }
 
-export function AuthCard({ eyebrow, title, description, footer, children }: AuthCardProps) {
+export function AuthCard({ eyebrow, title, description, children, footer }: AuthCardProps) {
   return (
-    <div className="mx-auto max-w-md py-8">
-      <div className="mb-6 flex justify-center">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white">
-            US
-          </div>
-        </Link>
-      </div>
+    <section className="relative mx-auto max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-br from-slate-100 via-white to-white"
+        aria-hidden="true"
+      />
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">{eyebrow}</p>
-        <h1 className="mb-2 text-2xl font-bold text-slate-900">{title}</h1>
-        <p className="mb-7 text-sm leading-6 text-slate-500">{description}</p>
+      <div className="relative">
+        <div className="mb-8">
+          <p className="text-sm font-medium text-slate-500">{eyebrow}</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{title}</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
+        </div>
 
         {children}
 
-        {footer && (
-          <p className="mt-6 text-center text-sm text-slate-500">{footer}</p>
-        )}
+        {footer ? <div className="mt-6 text-sm text-slate-600">{footer}</div> : null}
       </div>
-    </div>
+    </section>
   )
 }

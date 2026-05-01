@@ -35,9 +35,6 @@ public class BookingService {
         Item item = itemRepository.findById(req.getItemId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
 
-        if (item.getOwner().getId().equals(renterId))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot book your own item");
-
         if (!item.isPublished())
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Item is not available");
 
@@ -110,9 +107,9 @@ public class BookingService {
     }
 
     @Transactional
-    public Booking returnItem(Long id, Long actorId) {
+    public Booking returnItem(Long id, Long ownerId) {
         Booking booking = findOrThrow(id);
-        checkAccess(booking, actorId);
+        checkOwner(booking, ownerId);
         requireStatus(booking, BookingStatus.ACTIVE);
         booking.setStatus(BookingStatus.COMPLETED);
         return bookingRepository.save(booking);
@@ -123,7 +120,7 @@ public class BookingService {
         Booking booking = findOrThrow(id);
         checkAccess(booking, actorId);
 
-        if (!List.of(BookingStatus.PENDING, BookingStatus.APPROVED).contains(booking.getStatus()))
+        if (!List.of(BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.ACTIVE).contains(booking.getStatus()))
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Cannot cancel booking with status " + booking.getStatus());
 

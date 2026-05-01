@@ -67,11 +67,10 @@ function MyListings({ userId }: { userId: number }) {
   const qc = useQueryClient()
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['my-items', userId],
-    queryFn: () => fetchItems({ ownerId: userId, size: 100 }).then((r) => r.data),
+    queryKey: ['my-items'],
+    queryFn: () => fetchItems({ size: 100 }).then((r) => r.data),
   })
 
-  // Guard: only show items that actually belong to this user (defence against stale cache)
   const items = (data?.content ?? []).filter((item) => item.ownerId === userId)
   const invalidate = () => qc.invalidateQueries({ queryKey: ['my-items'] })
 

@@ -28,8 +28,6 @@ export interface ApiMessageResponse {
 }
 
 export interface RegisterResponse extends ApiMessageResponse {
-  token?: string
-  username?: string
   requiresEmailVerification: boolean
 }
 
@@ -106,7 +104,6 @@ export interface ItemUpdateRequest {
 export interface ItemsQuery {
   q?: string
   categoryId?: number
-  ownerId?: number
   minPrice?: number
   maxPrice?: number
   published?: boolean

@@ -245,6 +245,7 @@ export function HomePage() {
 
 function ItemCard({ item }: { item: Item }) {
   const image = item.images[0]
+  const ownerName = item.ownerUsername?.trim() || `User #${item.ownerId}`
 
   return (
     <Link
@@ -276,6 +277,9 @@ function ItemCard({ item }: { item: Item }) {
         <p className="flex-1 text-sm font-semibold leading-5 text-slate-900 line-clamp-2">
           {item.title}
         </p>
+        <p className="mt-2 text-sm text-slate-500">
+          Listed by <span className="font-medium text-slate-700">{ownerName}</span>
+        </p>
         {item.price != null ? (
           <p className="mt-3 text-base font-bold text-slate-900">
             {item.price.toLocaleString()}
@@ -284,7 +288,6 @@ function ItemCard({ item }: { item: Item }) {
         ) : (
           <p className="mt-3 text-sm text-slate-400">Price on request</p>
         )}
-        <p className="mt-2 text-xs text-slate-400">by {item.ownerUsername}</p>
       </div>
     </Link>
   )

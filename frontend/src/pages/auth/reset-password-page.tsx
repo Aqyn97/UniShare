@@ -1,49 +1,51 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
 import { resetPasswordRequest } from '../../shared/api/auth'
 import { getErrorMessage } from '../../shared/api/client'
 import { Button } from '../../shared/components/button'
 import { AuthCard } from './auth-card'
 
-const schema = z
+const resetPasswordSchema = z
   .object({
     password: z.string().min(6, 'Password must be at least 6 characters'),
-    confirm: z.string().min(1, 'Please confirm your password'),
+    confirmPassword: z.string().min(6, 'Please confirm your password'),
   })
-  .refine((d) => d.password === d.confirm, {
-    path: ['confirm'],
+  .refine((values) => values.password === values.confirmPassword, {
     message: 'Passwords do not match',
+    path: ['confirmPassword'],
   })
 
-type FormData = z.infer<typeof schema>
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 
 export function ResetPasswordPage() {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const [submitError, setSubmitError] = useState<string | null>(null)
-
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { password: '', confirm: '' },
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: '',
+      confirmPassword: '',
+    },
   })
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null)
-    if (!token) {
-      setSubmitError('Invalid or missing reset token. Request a new reset link.')
-      return
-    }
+
     try {
-      await resetPasswordRequest({ token, password: values.password })
-      navigate('/login', { replace: true })
+      const { data } = await resetPasswordRequest({
+        token,
+        password: values.password,
+      })
+      setSuccessMessage(data.message)
     } catch (error) {
       setSubmitError(getErrorMessage(error))
     }
@@ -52,17 +54,20 @@ export function ResetPasswordPage() {
   if (!token) {
     return (
       <AuthCard
-        eyebrow="UniShare"
-        title="Invalid link"
-        description="This password reset link is invalid or has expired."
+        eyebrow="Password recovery"
+        title="Reset link is missing"
+        description="Open the password reset page from the email we sent you. The link must include a token."
         footer={
-          <Link to="/forgot-password" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
-            Request a new link
-          </Link>
+          <>
+            Need a new link?{' '}
+            <Link to="/forgot-password" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
+              Request another reset email
+            </Link>
+          </>
         }
       >
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          No reset token found in the URL.
+          Password reset token is missing.
         </div>
       </AuthCard>
     )
@@ -70,13 +75,25 @@ export function ResetPasswordPage() {
 
   return (
     <AuthCard
-      eyebrow="UniShare"
-      title="Set new password"
-      description="Choose a strong password for your account."
+      eyebrow="Password recovery"
+      title="Create a new password"
+      description="Choose a new password for your UniShare account. The reset link can be used only once."
       footer={
-        <Link to="/login" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
-          Back to sign in
-        </Link>
+        successMessage ? (
+          <>
+            Password changed successfully.{' '}
+            <Link to="/login" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
+              Sign in
+            </Link>
+          </>
+        ) : (
+          <>
+            Need another link?{' '}
+            <Link to="/forgot-password" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
+              Request it again
+            </Link>
+          </>
+        )
       }
     >
       <form className="space-y-5" onSubmit={onSubmit}>
@@ -86,7 +103,7 @@ export function ResetPasswordPage() {
             {...register('password')}
             type="password"
             className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
-            placeholder="At least 6 characters"
+            placeholder="Create a new password"
           />
           {errors.password ? <span className="mt-2 block text-sm text-rose-600">{errors.password.message}</span> : null}
         </label>
@@ -94,13 +111,21 @@ export function ResetPasswordPage() {
         <label className="block">
           <span className="mb-2 block text-sm font-medium text-slate-700">Confirm password</span>
           <input
-            {...register('confirm')}
+            {...register('confirmPassword')}
             type="password"
             className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
-            placeholder="Repeat your password"
+            placeholder="Repeat the new password"
           />
-          {errors.confirm ? <span className="mt-2 block text-sm text-rose-600">{errors.confirm.message}</span> : null}
+          {errors.confirmPassword ? (
+            <span className="mt-2 block text-sm text-rose-600">{errors.confirmPassword.message}</span>
+          ) : null}
         </label>
+
+        {successMessage ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {successMessage}
+          </div>
+        ) : null}
 
         {submitError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -109,7 +134,7 @@ export function ResetPasswordPage() {
         ) : null}
 
         <Button type="submit" loading={isSubmitting} className="w-full py-3">
-          {isSubmitting ? 'Saving...' : 'Set new password'}
+          {isSubmitting ? 'Updating password...' : 'Update password'}
         </Button>
       </form>
     </AuthCard>

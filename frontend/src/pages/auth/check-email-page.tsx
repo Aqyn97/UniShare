@@ -8,71 +8,59 @@ import { getErrorMessage } from '../../shared/api/client'
 import { Button } from '../../shared/components/button'
 import { AuthCard } from './auth-card'
 
-const schema = z.object({
+const emailSchema = z.object({
   email: z.string().email('Enter a valid email'),
 })
 
-type FormData = z.infer<typeof schema>
+type EmailFormData = z.infer<typeof emailSchema>
 
 export function CheckEmailPage() {
   const [searchParams] = useSearchParams()
-  const prefillEmail = searchParams.get('email') ?? ''
-
-  const [success, setSuccess] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { email: prefillEmail },
+  } = useForm<EmailFormData>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: {
+      email: searchParams.get('email') ?? '',
+    },
   })
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null)
+
     try {
-      await resendVerificationRequest(values)
-      setSuccess(true)
+      const { data } = await resendVerificationRequest(values)
+      setSuccessMessage(data.message)
     } catch (error) {
       setSubmitError(getErrorMessage(error))
     }
   })
 
-  if (success) {
-    return (
-      <AuthCard
-        eyebrow="UniShare"
-        title="Email sent"
-        description="Check your inbox for a new verification link. It may take a minute to arrive."
-        footer={
-          <Link to="/login" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
-            Back to sign in
-          </Link>
-        }
-      >
-        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          Verification email sent successfully.
-        </div>
-      </AuthCard>
-    )
-  }
-
   return (
     <AuthCard
-      eyebrow="UniShare"
-      title="Resend confirmation"
-      description="Enter your email and we'll send a new verification link."
+      eyebrow="One more step"
+      title="Confirm your email"
+      description="We sent a confirmation link to your inbox. Open it before trying to sign in. If the email did not arrive, request another one below."
       footer={
         <>
-          Already verified?{' '}
+          Already confirmed it?{' '}
           <Link to="/login" className="font-medium text-slate-950 underline decoration-slate-300 underline-offset-4">
-            Sign in
+            Go to sign in
           </Link>
         </>
       }
     >
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+        <p className="font-medium text-slate-900">What happens next</p>
+        <p className="mt-2">1. Open the email from UniShare.</p>
+        <p className="mt-1">2. Click the confirmation link.</p>
+        <p className="mt-1">3. Return here and sign in.</p>
+      </div>
+
       <form className="space-y-5" onSubmit={onSubmit}>
         <label className="block">
           <span className="mb-2 block text-sm font-medium text-slate-700">Email</span>
@@ -85,6 +73,12 @@ export function CheckEmailPage() {
           {errors.email ? <span className="mt-2 block text-sm text-rose-600">{errors.email.message}</span> : null}
         </label>
 
+        {successMessage ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {successMessage}
+          </div>
+        ) : null}
+
         {submitError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {submitError}
@@ -92,7 +86,7 @@ export function CheckEmailPage() {
         ) : null}
 
         <Button type="submit" loading={isSubmitting} className="w-full py-3">
-          {isSubmitting ? 'Sending...' : 'Resend verification email'}
+          {isSubmitting ? 'Sending link...' : 'Resend confirmation email'}
         </Button>
       </form>
     </AuthCard>

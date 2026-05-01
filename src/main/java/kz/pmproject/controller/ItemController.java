@@ -71,7 +71,6 @@ public class ItemController {
     public ResponseEntity<Page<ItemResponse>> list(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) Long ownerId,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean published,
@@ -81,18 +80,8 @@ public class ItemController {
         if (size < 1 || size > 100) throw new ResponseStatusException(BAD_REQUEST, "size must be between 1 and 100");
         if (page < 0) throw new ResponseStatusException(BAD_REQUEST, "page must be >= 0");
 
-        // Only the item owner (or an admin) may see unpublished drafts.
-        // Everyone else — including unauthenticated callers — is locked to published=true.
-        Long callerId = authorizationService.getCurrentUserId();
-        boolean isOwnerOrAdmin = authorizationService.isAdmin()
-                || (ownerId != null && ownerId.equals(callerId));
-        if (!isOwnerOrAdmin && !Boolean.FALSE.equals(published)) {
-            published = true;
-        }
-
         Specification<Item> spec = ItemSpecs.search(q);
         spec = andIfNotNull(spec, ItemSpecs.categoryId(categoryId));
-        spec = andIfNotNull(spec, ItemSpecs.ownerOf(ownerId));
         spec = andIfNotNull(spec, ItemSpecs.minPrice(minPrice));
         spec = andIfNotNull(spec, ItemSpecs.maxPrice(maxPrice));
         spec = andIfNotNull(spec, ItemSpecs.published(published));
