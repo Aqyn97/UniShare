@@ -51,7 +51,7 @@ public class AuthService {
 
         upgradeLegacyPasswordIfNeeded(user, request.getPassword());
 
-        if (!user.isEmailVerified()) {
+        if (authProperties.isEmailEnabled() && !user.isEmailVerified()) {
             sendVerificationEmail(user);
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
@@ -81,27 +81,33 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .enabled(true)
-                .emailVerified(false)
+                .emailVerified(!authProperties.isEmailEnabled())
                 .roles(Set.of(userRole))
                 .build();
 
         userRepository.save(user);
 
-        try {
-            sendVerificationEmail(user);
-        } catch (Exception e) {
-            System.out.println("Verification email sending failed: " + e.getMessage());
+        if (authProperties.isEmailEnabled()) {
+            try {
+                sendVerificationEmail(user);
+            } catch (Exception e) {
+                System.out.println("Verification email sending failed: " + e.getMessage());
+            }
         }
 
         return Map.of(
-                "message", "Account created. Please check your email to confirm it before signing in.",
+                "message", authProperties.isEmailEnabled()
+                        ? "Account created. Please check your email to confirm it before signing in."
+                        : "Account created successfully. You can sign in now.",
                 "email", user.getEmail(),
-                "requiresEmailVerification", true
+                "requiresEmailVerification", authProperties.isEmailEnabled()
         );
     }
 
     @Transactional
     public Map<String, Object> verifyEmail(String tokenValue) {
+        ensureEmailAuthEnabled("Email verification is disabled.");
+
         EmailActionToken token = actionTokenService.requireActiveToken(
                 tokenValue,
                 EmailActionTokenPurpose.EMAIL_VERIFICATION,
@@ -120,6 +126,8 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> resendVerification(EmailRequest request) {
+        ensureEmailAuthEnabled("Email verification is disabled.");
+
         userRepository.findByEmail(request.getEmail())
                 .filter(user -> !user.isEmailVerified())
                 .ifPresent(this::sendVerificationEmail);
@@ -129,6 +137,8 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> forgotPassword(EmailRequest request) {
+        ensureEmailAuthEnabled("Password reset by email is disabled.");
+
         userRepository.findByEmail(request.getEmail())
                 .ifPresent(this::sendPasswordResetEmail);
 
@@ -137,6 +147,8 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> resetPassword(ResetPasswordRequest request) {
+        ensureEmailAuthEnabled("Password reset by email is disabled.");
+
         EmailActionToken token = actionTokenService.requireActiveToken(
                 request.getToken(),
                 EmailActionTokenPurpose.PASSWORD_RESET,
@@ -155,6 +167,10 @@ public class AuthService {
     }
 
     private void sendVerificationEmail(User user) {
+        if (!authProperties.isEmailEnabled()) {
+            return;
+        }
+
         EmailActionToken token = actionTokenService.createToken(
                 user,
                 EmailActionTokenPurpose.EMAIL_VERIFICATION,
@@ -165,6 +181,10 @@ public class AuthService {
     }
 
     private void sendPasswordResetEmail(User user) {
+        if (!authProperties.isEmailEnabled()) {
+            return;
+        }
+
         EmailActionToken token = actionTokenService.createToken(
                 user,
                 EmailActionTokenPurpose.PASSWORD_RESET,
@@ -200,5 +220,11 @@ public class AuthService {
 
         user.setPassword(passwordEncoder.encode(rawPassword));
         userRepository.save(user);
+    }
+
+    private void ensureEmailAuthEnabled(String message) {
+        if (!authProperties.isEmailEnabled()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+        }
     }
 }

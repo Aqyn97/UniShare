@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "app.auth")
 public class AuthProperties {
     private String frontendBaseUrl = "http://localhost:5173";
+    private boolean emailEnabled = true;
     private String mailMode = "log";
     private String mailFrom = "no-reply@unishare.local";
     private long verificationTtlHours = 24;

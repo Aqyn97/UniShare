@@ -54,6 +54,7 @@ cloudinary:
 app:
   auth:
     frontend-base-url: ${APP_AUTH_FRONTEND_BASE_URL:http://localhost:5173}
+    email-enabled: ${APP_AUTH_EMAIL_ENABLED:true}
     mail-mode: ${APP_AUTH_MAIL_MODE:log}
     mail-from: ${APP_AUTH_MAIL_FROM:no-reply@unishare.local}
     verification-ttl-hours: ${APP_AUTH_VERIFICATION_TTL_HOURS:24}

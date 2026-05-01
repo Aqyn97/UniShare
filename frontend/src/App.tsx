@@ -16,6 +16,7 @@ import { CreateItemPage } from './pages/items/create-item-page'
 import { EditItemPage } from './pages/items/edit-item-page'
 import { ItemDetailPage } from './pages/items/item-detail-page'
 import { NotFoundPage } from './pages/not-found/not-found-page'
+import { AUTH_EMAIL_ENABLED } from './shared/config/auth'
 
 const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
   clsx(
@@ -197,6 +198,14 @@ function GuestOnlyRoute({ children }: { children: ReactNode }) {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children
 }
 
+function EmailAuthGuestRoute({ children }: { children: ReactNode }) {
+  if (!AUTH_EMAIL_ENABLED) {
+    return <Navigate to="/login" replace />
+  }
+
+  return <GuestOnlyRoute>{children}</GuestOnlyRoute>
+}
+
 function App() {
   return (
     <Routes>
@@ -221,33 +230,33 @@ function App() {
         <Route
           path="check-email"
           element={
-            <GuestOnlyRoute>
+            <EmailAuthGuestRoute>
               <CheckEmailPage />
-            </GuestOnlyRoute>
+            </EmailAuthGuestRoute>
           }
         />
         <Route
           path="verify-email"
           element={
-            <GuestOnlyRoute>
+            <EmailAuthGuestRoute>
               <VerifyEmailPage />
-            </GuestOnlyRoute>
+            </EmailAuthGuestRoute>
           }
         />
         <Route
           path="forgot-password"
           element={
-            <GuestOnlyRoute>
+            <EmailAuthGuestRoute>
               <ForgotPasswordPage />
-            </GuestOnlyRoute>
+            </EmailAuthGuestRoute>
           }
         />
         <Route
           path="reset-password"
           element={
-            <GuestOnlyRoute>
+            <EmailAuthGuestRoute>
               <ResetPasswordPage />
-            </GuestOnlyRoute>
+            </EmailAuthGuestRoute>
           }
         />
         <Route

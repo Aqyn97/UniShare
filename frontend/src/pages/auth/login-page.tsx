@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { useAuth } from '../../features/auth/use-auth'
 import { getErrorMessage } from '../../shared/api/client'
 import { Button } from '../../shared/components/button'
+import { AUTH_EMAIL_ENABLED } from '../../shared/config/auth'
 import { AuthCard } from './auth-card'
 
 const loginSchema = z.object({
@@ -16,9 +17,11 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginPage() {
+  const location = useLocation()
   const navigate = useNavigate()
   const { login } = useAuth()
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const successMessage = (location.state as { message?: string } | null)?.message ?? null
   const {
     register,
     handleSubmit,
@@ -78,20 +81,28 @@ export function LoginPage() {
           {errors.password ? <span className="mt-2 block text-sm text-rose-600">{errors.password.message}</span> : null}
         </label>
 
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <Link
-            to="/forgot-password"
-            className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 hover:text-slate-950"
-          >
-            Forgot password?
-          </Link>
-          <Link
-            to="/check-email"
-            className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 hover:text-slate-950"
-          >
-            Resend confirmation
-          </Link>
-        </div>
+        {AUTH_EMAIL_ENABLED ? (
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <Link
+              to="/forgot-password"
+              className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 hover:text-slate-950"
+            >
+              Forgot password?
+            </Link>
+            <Link
+              to="/check-email"
+              className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 hover:text-slate-950"
+            >
+              Resend confirmation
+            </Link>
+          </div>
+        ) : null}
+
+        {successMessage ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {successMessage}
+          </div>
+        ) : null}
 
         {submitError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">

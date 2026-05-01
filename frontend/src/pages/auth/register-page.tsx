@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { useAuth } from '../../features/auth/use-auth'
 import { getErrorMessage } from '../../shared/api/client'
 import { Button } from '../../shared/components/button'
+import { AUTH_EMAIL_ENABLED } from '../../shared/config/auth'
 import { AuthCard } from './auth-card'
 
 const registerSchema = z.object({
@@ -38,7 +39,15 @@ export function RegisterPage() {
 
     try {
       const response = await registerUser(values)
-      navigate(`/check-email?email=${encodeURIComponent(response.email ?? values.email)}`, { replace: true })
+      if (AUTH_EMAIL_ENABLED && response.requiresEmailVerification) {
+        navigate(`/check-email?email=${encodeURIComponent(response.email ?? values.email)}`, { replace: true })
+        return
+      }
+
+      navigate('/login', {
+        replace: true,
+        state: { message: response.message },
+      })
     } catch (error) {
       setSubmitError(getErrorMessage(error))
     }

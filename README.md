@@ -67,6 +67,7 @@ SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=postgres
 
 APP_AUTH_FRONTEND_BASE_URL=http://localhost:5173
+APP_AUTH_EMAIL_ENABLED=true
 APP_AUTH_MAIL_MODE=log
 APP_AUTH_MAIL_FROM=no-reply@unishare.local
 
@@ -74,6 +75,17 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
+
+`APP_AUTH_EMAIL_ENABLED=true` keeps email confirmation and password reset enabled.
+
+Set `APP_AUTH_EMAIL_ENABLED=false` to turn off all email-based auth flows. In that mode:
+
+- new accounts are created with `emailVerified=true`
+- sign-in is no longer blocked by email confirmation
+- verify/resend/forgot/reset email endpoints are disabled
+- the frontend hides and redirects email confirmation and password reset pages
+
+After changing this flag, restart both the backend and the Vite frontend so they reload `.env`.
 
 `APP_AUTH_MAIL_MODE=log` is the easiest mode for local development. In this mode, confirmation and reset links are written to the backend logs instead of being sent to a real mailbox.
 
@@ -119,6 +131,8 @@ The frontend runs on `http://localhost:5173`.
 - If `APP_AUTH_MAIL_MODE=log`, copy the confirmation/reset link from the backend logs.
 - If SMTP is configured, the user receives a real email with the confirmation or password reset link.
 - Password reset is available from the login page through the "Forgot password?" link.
+
+If `APP_AUTH_EMAIL_ENABLED=false`, registration goes straight to the sign-in flow and all email-based auth steps are skipped.
 
 ## Usage
 
