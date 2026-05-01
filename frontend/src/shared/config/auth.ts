@@ -1,0 +1,1 @@
+export const AUTH_EMAIL_ENABLED = __APP_AUTH_EMAIL_ENABLED__
