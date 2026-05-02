@@ -9,7 +9,7 @@ import lombok.Data;
 public class ReviewCreateRequest {
 
     @NotNull
-    private Long bookingId;
+    private Long itemId;
 
     @NotNull
     @Min(1)

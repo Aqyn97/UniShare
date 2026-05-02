@@ -9,7 +9,9 @@ import kz.pmproject.model.market.entity.Item;
 import kz.pmproject.model.user.entity.User;
 import kz.pmproject.repository.CategoryRepository;
 import kz.pmproject.repository.ItemImageRepository;
+import kz.pmproject.repository.ItemRatingSummary;
 import kz.pmproject.repository.ItemRepository;
+import kz.pmproject.repository.ReviewRepository;
 import kz.pmproject.repository.UserRepository;
 import kz.pmproject.service.AuthorizationService;
 import kz.pmproject.service.ItemMapper;
@@ -26,8 +28,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import static org.springframework.http.HttpStatus.*;
+import static java.util.stream.Collectors.toMap;
 
 @RestController
 @RequestMapping("/items")
@@ -37,6 +43,7 @@ public class ItemController {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ItemImageRepository itemImageRepository;
+    private final ReviewRepository reviewRepository;
     private final AuthorizationService authorizationService;
     private final ItemMapper itemMapper;
 
@@ -64,7 +71,12 @@ public class ItemController {
                 .published(false)
                 .build());
 
-        return ResponseEntity.status(CREATED).body(itemMapper.toResponse(saved, itemImageRepository.findByItemIdOrderByIdAsc(saved.getId())));
+        return ResponseEntity.status(CREATED).body(itemMapper.toResponse(
+                saved,
+                itemImageRepository.findByItemIdOrderByIdAsc(saved.getId()),
+                null,
+                0
+        ));
     }
 
     @GetMapping
@@ -87,7 +99,16 @@ public class ItemController {
         spec = andIfNotNull(spec, ItemSpecs.published(published));
 
         Page<Item> items = itemRepository.findAll(spec, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
-        Page<ItemResponse> mapped = items.map(i -> itemMapper.toResponse(i, itemImageRepository.findByItemIdOrderByIdAsc(i.getId())));
+        List<Long> itemIds = items.stream().map(Item::getId).toList();
+        Map<Long, ItemRatingSummary> ratingsByItemId = itemIds.isEmpty()
+                ? Map.of()
+                : reviewRepository.summarizeByItemIds(itemIds).stream()
+                .collect(toMap(ItemRatingSummary::getItemId, Function.identity()));
+        Page<ItemResponse> mapped = items.map(i -> itemMapper.toResponse(
+                i,
+                itemImageRepository.findByItemIdOrderByIdAsc(i.getId()),
+                ratingsByItemId.get(i.getId())
+        ));
         return ResponseEntity.ok(mapped);
     }
 
@@ -102,7 +123,12 @@ public class ItemController {
     public ResponseEntity<ItemResponse> get(@PathVariable Long id) {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Item not found"));
-        return ResponseEntity.ok(itemMapper.toResponse(item, itemImageRepository.findByItemIdOrderByIdAsc(id)));
+        return ResponseEntity.ok(itemMapper.toResponse(
+                item,
+                itemImageRepository.findByItemIdOrderByIdAsc(id),
+                reviewRepository.findAverageRatingByItemId(id),
+                reviewRepository.countByItemId(id)
+        ));
     }
 
     @PatchMapping("/{id}")
@@ -125,7 +151,12 @@ public class ItemController {
             item.setCategory(category);
         }
 
-        return ResponseEntity.ok(itemMapper.toResponse(item, itemImageRepository.findByItemIdOrderByIdAsc(id)));
+        return ResponseEntity.ok(itemMapper.toResponse(
+                item,
+                itemImageRepository.findByItemIdOrderByIdAsc(id),
+                reviewRepository.findAverageRatingByItemId(id),
+                reviewRepository.countByItemId(id)
+        ));
     }
 
     @DeleteMapping("/{id}")
@@ -148,7 +179,12 @@ public class ItemController {
             throw new ResponseStatusException(FORBIDDEN, "Forbidden");
         }
         item.setPublished(true);
-        return ResponseEntity.ok(itemMapper.toResponse(item, itemImageRepository.findByItemIdOrderByIdAsc(id)));
+        return ResponseEntity.ok(itemMapper.toResponse(
+                item,
+                itemImageRepository.findByItemIdOrderByIdAsc(id),
+                reviewRepository.findAverageRatingByItemId(id),
+                reviewRepository.countByItemId(id)
+        ));
     }
 
     @PostMapping("/{id}/hide")
@@ -160,7 +196,12 @@ public class ItemController {
             throw new ResponseStatusException(FORBIDDEN, "Forbidden");
         }
         item.setPublished(false);
-        return ResponseEntity.ok(itemMapper.toResponse(item, itemImageRepository.findByItemIdOrderByIdAsc(id)));
+        return ResponseEntity.ok(itemMapper.toResponse(
+                item,
+                itemImageRepository.findByItemIdOrderByIdAsc(id),
+                reviewRepository.findAverageRatingByItemId(id),
+                reviewRepository.countByItemId(id)
+        ));
     }
 }
 

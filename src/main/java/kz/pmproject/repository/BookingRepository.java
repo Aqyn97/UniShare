@@ -13,6 +13,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByRenterIdAndStatusOrderByCreatedAtDesc(Long renterId, BookingStatus status);
     List<Booking> findByOwnerIdOrderByCreatedAtDesc(Long ownerId);
     List<Booking> findByOwnerIdAndStatusOrderByCreatedAtDesc(Long ownerId, BookingStatus status);
+    List<Booking> findByItemIdAndStatusNotInOrderByDateFromAsc(Long itemId, List<BookingStatus> statuses);
+
+    boolean existsByRenterIdAndItemIdAndStatus(Long renterId, Long itemId, BookingStatus status);
 
     boolean existsByItemIdAndStatusNotInAndDateFromLessThanEqualAndDateToGreaterThanEqual(
             Long itemId,

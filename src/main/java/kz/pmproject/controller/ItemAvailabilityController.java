@@ -3,8 +3,11 @@ package kz.pmproject.controller;
 import jakarta.validation.Valid;
 import kz.pmproject.model.market.dto.AvailabilityBlockDto;
 import kz.pmproject.model.market.dto.AvailabilityPatchRequest;
+import kz.pmproject.model.market.dto.AvailabilityWindowResponse;
+import kz.pmproject.model.market.entity.Booking;
 import kz.pmproject.model.market.entity.Item;
 import kz.pmproject.model.market.entity.ItemAvailabilityBlock;
+import kz.pmproject.repository.BookingRepository;
 import kz.pmproject.repository.ItemAvailabilityBlockRepository;
 import kz.pmproject.repository.ItemRepository;
 import kz.pmproject.service.AuthorizationService;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -24,12 +28,41 @@ import static org.springframework.http.HttpStatus.*;
 public class ItemAvailabilityController {
     private final ItemRepository itemRepository;
     private final ItemAvailabilityBlockRepository blockRepository;
+    private final BookingRepository bookingRepository;
     private final AuthorizationService authorizationService;
 
     @GetMapping
-    public ResponseEntity<List<ItemAvailabilityBlock>> getAvailability(@PathVariable Long id) {
+    public ResponseEntity<List<AvailabilityWindowResponse>> getAvailability(@PathVariable Long id) {
         if (!itemRepository.existsById(id)) throw new ResponseStatusException(NOT_FOUND, "Item not found");
-        return ResponseEntity.ok(blockRepository.findByItemIdOrderByStartDateAsc(id));
+
+        List<AvailabilityWindowResponse> manualBlocks = blockRepository.findByItemIdOrderByStartDateAsc(id)
+                .stream()
+                .map(block -> AvailabilityWindowResponse.builder()
+                        .startDate(block.getStartDate())
+                        .endDate(block.getEndDate())
+                        .source("MANUAL_BLOCK")
+                        .build())
+                .toList();
+
+        List<AvailabilityWindowResponse> bookingBlocks = bookingRepository
+                .findByItemIdAndStatusNotInOrderByDateFromAsc(
+                        id,
+                        List.of(Booking.BookingStatus.REJECTED, Booking.BookingStatus.CANCELLED)
+                )
+                .stream()
+                .map(booking -> AvailabilityWindowResponse.builder()
+                        .startDate(booking.getDateFrom())
+                        .endDate(booking.getDateTo())
+                        .source("BOOKING")
+                        .build())
+                .toList();
+
+        List<AvailabilityWindowResponse> windows = Stream.concat(manualBlocks.stream(), bookingBlocks.stream())
+                .sorted(java.util.Comparator.comparing(AvailabilityWindowResponse::getStartDate)
+                        .thenComparing(AvailabilityWindowResponse::getEndDate))
+                .toList();
+
+        return ResponseEntity.ok(windows);
     }
 
     @PatchMapping

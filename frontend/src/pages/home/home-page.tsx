@@ -280,6 +280,13 @@ function ItemCard({ item }: { item: Item }) {
         <p className="mt-2 text-sm text-slate-500">
           Listed by <span className="font-medium text-slate-700">{ownerName}</span>
         </p>
+        {item.ratingAvg != null && item.ratingCount > 0 && (
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-600">
+            <span className="text-amber-400">★</span>
+            <span className="font-medium text-slate-800">{item.ratingAvg.toFixed(1)}</span>
+            <span className="text-slate-400">({item.ratingCount})</span>
+          </p>
+        )}
         {item.price != null ? (
           <p className="mt-3 text-base font-bold text-slate-900">
             {item.price.toLocaleString()}

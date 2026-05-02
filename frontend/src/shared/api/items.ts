@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { Item, ItemCreateRequest, ItemUpdateRequest, ItemsQuery, Page } from './types'
+import type { AvailabilityWindow, Item, ItemCreateRequest, ItemUpdateRequest, ItemsQuery, Page } from './types'
 
 export function fetchItems(query: ItemsQuery = {}) {
   return apiClient.get<Page<Item>>('/items', { params: query })
@@ -7,6 +7,10 @@ export function fetchItems(query: ItemsQuery = {}) {
 
 export function fetchItem(id: number) {
   return apiClient.get<Item>(`/items/${id}`)
+}
+
+export function fetchItemAvailability(id: number) {
+  return apiClient.get<AvailabilityWindow[]>(`/items/${id}/availability`)
 }
 
 export function createItem(data: ItemCreateRequest) {

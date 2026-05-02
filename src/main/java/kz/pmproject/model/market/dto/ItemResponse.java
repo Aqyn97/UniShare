@@ -22,6 +22,8 @@ public class ItemResponse {
     private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private BigDecimal ratingAvg;
+    private long ratingCount;
 
     private List<ItemImageResponse> images;
 }

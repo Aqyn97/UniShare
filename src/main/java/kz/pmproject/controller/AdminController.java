@@ -1,10 +1,10 @@
 package kz.pmproject.controller;
 
+import kz.pmproject.model.market.dto.AdminBookingResponse;
 import kz.pmproject.model.market.dto.AdminItemResponse;
 import kz.pmproject.model.market.dto.AdminStatsResponse;
-import kz.pmproject.model.market.entity.Booking;
+import kz.pmproject.model.market.dto.AdminUserResponse;
 import kz.pmproject.model.market.entity.Item;
-import kz.pmproject.model.user.entity.User;
 import kz.pmproject.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,17 +22,17 @@ public class AdminController {
     private final AdminService adminService;
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getUsers() {
+    public ResponseEntity<List<AdminUserResponse>> getUsers() {
         return ResponseEntity.ok(adminService.getUsers());
     }
 
     @PatchMapping("/users/{id}/ban")
-    public ResponseEntity<User> banUser(@PathVariable Long id) {
+    public ResponseEntity<AdminUserResponse> banUser(@PathVariable Long id) {
         return ResponseEntity.ok(adminService.banUser(id));
     }
 
     @PatchMapping("/users/{id}/unban")
-    public ResponseEntity<User> unbanUser(@PathVariable Long id) {
+    public ResponseEntity<AdminUserResponse> unbanUser(@PathVariable Long id) {
         return ResponseEntity.ok(adminService.unbanUser(id));
     }
 
@@ -47,7 +47,7 @@ public class AdminController {
     }
 
     @GetMapping("/bookings")
-    public ResponseEntity<List<Booking>> getBookings() {
+    public ResponseEntity<List<AdminBookingResponse>> getBookings() {
         return ResponseEntity.ok(adminService.getBookings());
     }
 

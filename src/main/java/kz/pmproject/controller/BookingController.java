@@ -2,7 +2,7 @@ package kz.pmproject.controller;
 
 import jakarta.validation.Valid;
 import kz.pmproject.model.market.dto.BookingRequest;
-import kz.pmproject.model.market.entity.Booking;
+import kz.pmproject.model.market.dto.BookingResponse;
 import kz.pmproject.model.market.entity.Booking.BookingStatus;
 import kz.pmproject.model.user.data.TokenPrincipal;
 import kz.pmproject.service.BookingService;
@@ -22,7 +22,7 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    public ResponseEntity<Booking> create(
+    public ResponseEntity<BookingResponse> create(
             @Valid @RequestBody BookingRequest request,
             @AuthenticationPrincipal TokenPrincipal principal
     ) {
@@ -31,7 +31,7 @@ public class BookingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Booking>> list(
+    public ResponseEntity<List<BookingResponse>> list(
             @RequestParam(defaultValue = "renter") String role,
             @RequestParam(required = false) BookingStatus status,
             @AuthenticationPrincipal TokenPrincipal principal
@@ -40,7 +40,7 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Booking> getOne(
+    public ResponseEntity<BookingResponse> getOne(
             @PathVariable Long id,
             @AuthenticationPrincipal TokenPrincipal principal
     ) {
@@ -48,7 +48,7 @@ public class BookingController {
     }
 
     @PostMapping("/{id}/approve")
-    public ResponseEntity<Booking> approve(
+    public ResponseEntity<BookingResponse> approve(
             @PathVariable Long id,
             @AuthenticationPrincipal TokenPrincipal principal
     ) {
@@ -56,7 +56,7 @@ public class BookingController {
     }
 
     @PostMapping("/{id}/reject")
-    public ResponseEntity<Booking> reject(
+    public ResponseEntity<BookingResponse> reject(
             @PathVariable Long id,
             @AuthenticationPrincipal TokenPrincipal principal
     ) {
@@ -64,7 +64,7 @@ public class BookingController {
     }
 
     @PostMapping("/{id}/handover")
-    public ResponseEntity<Booking> handover(
+    public ResponseEntity<BookingResponse> handover(
             @PathVariable Long id,
             @AuthenticationPrincipal TokenPrincipal principal
     ) {
@@ -72,7 +72,7 @@ public class BookingController {
     }
 
     @PostMapping("/{id}/return")
-    public ResponseEntity<Booking> returnItem(
+    public ResponseEntity<BookingResponse> returnItem(
             @PathVariable Long id,
             @AuthenticationPrincipal TokenPrincipal principal
     ) {
@@ -80,7 +80,7 @@ public class BookingController {
     }
 
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<Booking> cancel(
+    public ResponseEntity<BookingResponse> cancel(
             @PathVariable Long id,
             @AuthenticationPrincipal TokenPrincipal principal
     ) {
