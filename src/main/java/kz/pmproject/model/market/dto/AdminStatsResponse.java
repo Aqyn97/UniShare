@@ -10,5 +10,5 @@ public class AdminStatsResponse {
     private long itemsCount;
     private long bookingsCount;
     private long reviewsCount;
-    private double averageRating;
+    private Double averageRating;
 }

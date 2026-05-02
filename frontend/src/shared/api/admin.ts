@@ -1,5 +1,4 @@
 import { apiClient } from './client'
-import type { Booking } from './types'
 
 export interface AdminUser {
   userId: number
@@ -7,6 +6,9 @@ export interface AdminUser {
   email: string | null
   enabled: boolean
   roles: string[]
+  createdAt: string
+  ratingAvg: number | null
+  ratingCount: number
 }
 
 export interface AdminItem {
@@ -15,9 +17,28 @@ export interface AdminItem {
   ownerUsername: string
   categoryName: string | null
   title: string
+  description: string | null
   price: number | null
   currency: string
   published: boolean
+  ratingAvg: number | null
+  ratingCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AdminBooking {
+  id: number
+  itemId: number
+  itemTitle: string | null
+  renterId: number
+  renterUsername: string | null
+  ownerId: number
+  ownerUsername: string | null
+  dateFrom: string
+  dateTo: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+  totalPrice: number | null
   createdAt: string
 }
 
@@ -54,5 +75,5 @@ export function hideAdminItem(id: number) {
 }
 
 export function fetchAdminBookings() {
-  return apiClient.get<Booking[]>('/admin/bookings')
+  return apiClient.get<AdminBooking[]>('/admin/bookings')
 }

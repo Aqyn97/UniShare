@@ -19,6 +19,8 @@ public class AdminItemResponse {
     private BigDecimal price;
     private String currency;
     private boolean published;
+    private BigDecimal ratingAvg;
+    private long ratingCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
