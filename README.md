@@ -37,9 +37,9 @@ Rent a textbook for a week. Lend your camera over break. Stop buying things you'
 
 ## The problem
 
-A $200 textbook for one semester. An $80 calculator needed for one midterm. A camera kit sitting untouched for 11 months.
+A 2000KZT textbook for one semester.An 800KZT calculator needed for one midterm A camera kit sitting untouched for 11 months
 
-Campus stores don't help. Facebook Marketplace is a gamble. UniShare is the missing layer — students listing what they have, other students renting what they need, with a full booking workflow built in so nothing falls apart in someone's DMs.
+Campus stores don't help. Facebook Marketplace is a gamble. UniShare is the missing layer — students listing what they have, other students renting what they need, with a full booking workflow built in so nothing falls apart in someone's DMs
 
 ---
 
@@ -66,7 +66,6 @@ Campus stores don't help. Facebook Marketplace is a gamble. UniShare is the miss
 
 </div>
 
-> Screenshots not added yet. Drop them in assets/screenshots/ and update this table.
 
 ---
 
