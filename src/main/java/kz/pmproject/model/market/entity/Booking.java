@@ -44,6 +44,9 @@ public class Booking {
     @Column(name = "total_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalPrice;
 
+    @Column(name = "renter_note", columnDefinition = "text")
+    private String renterNote;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

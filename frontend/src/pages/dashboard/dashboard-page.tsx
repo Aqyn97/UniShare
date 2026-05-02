@@ -10,11 +10,12 @@ import {
   rejectBooking,
   returnBooking,
 } from '../../shared/api/bookings'
-import { deleteItem, fetchItem, fetchItems, hideItem, publishItem } from '../../shared/api/items'
+import { getErrorMessage } from '../../shared/api/client'
+import { deleteItem, fetchItems, hideItem, publishItem } from '../../shared/api/items'
+import type { Booking, BookingStatus, Item } from '../../shared/api/types'
 import { BookingBadge } from '../../shared/components/booking-badge'
 import { Button } from '../../shared/components/button'
 import { formatDate } from '../../shared/utils/format'
-import type { Booking, BookingStatus, Item } from '../../shared/api/types'
 
 type Tab = 'listings' | 'renter' | 'owner'
 
@@ -31,7 +32,7 @@ export function DashboardPage() {
         <p className="mt-1 text-sm text-slate-500">Welcome back, {user.username}</p>
       </div>
 
-      <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 w-fit">
+      <div className="flex w-fit gap-1 rounded-xl border border-slate-200 bg-white p-1">
         {(
           [
             { key: 'listings', label: 'My listings' },
@@ -60,8 +61,6 @@ export function DashboardPage() {
     </div>
   )
 }
-
-// ─── My Listings ──────────────────────────────────────────────────────────────
 
 function MyListings({ userId }: { userId: number }) {
   const qc = useQueryClient()
@@ -197,10 +196,9 @@ function ItemRow({
   )
 }
 
-// ─── Renter Bookings ──────────────────────────────────────────────────────────
-
 function RenterBookings() {
   const qc = useQueryClient()
+  const [actionError, setActionError] = useState('')
   const invalidate = () => qc.invalidateQueries({ queryKey: ['bookings', 'renter'] })
 
   const { data: bookings = [], isLoading, isError } = useQuery({
@@ -208,8 +206,22 @@ function RenterBookings() {
     queryFn: () => fetchMyBookings('renter').then((r) => r.data),
   })
 
-  const cancel = useMutation({ mutationFn: cancelBooking, onSuccess: invalidate })
-  const returnItem = useMutation({ mutationFn: returnBooking, onSuccess: invalidate })
+  const cancel = useMutation({
+    mutationFn: cancelBooking,
+    onSuccess: () => {
+      setActionError('')
+      invalidate()
+    },
+    onError: (error) => setActionError(getErrorMessage(error)),
+  })
+  const returnItem = useMutation({
+    mutationFn: returnBooking,
+    onSuccess: () => {
+      setActionError('')
+      invalidate()
+    },
+    onError: (error) => setActionError(getErrorMessage(error)),
+  })
   const isActing = cancel.isPending || returnItem.isPending
 
   if (isLoading) return <SectionSkeleton rows={3} />
@@ -218,8 +230,9 @@ function RenterBookings() {
 
   return (
     <div className="space-y-2">
+      {actionError && <ErrorBanner message={actionError} />}
       {bookings.map((booking) => (
-        <BookingRow key={booking.id} booking={booking}>
+        <BookingRow key={booking.id} booking={booking} mode="renter">
           <div className="flex gap-2">
             {booking.status === 'ACTIVE' && (
               <ActionButton
@@ -246,10 +259,9 @@ function RenterBookings() {
   )
 }
 
-// ─── Owner Bookings ───────────────────────────────────────────────────────────
-
 function OwnerBookings() {
   const qc = useQueryClient()
+  const [actionError, setActionError] = useState('')
   const invalidate = () => qc.invalidateQueries({ queryKey: ['bookings', 'owner'] })
 
   const { data: bookings = [], isLoading, isError } = useQuery({
@@ -257,9 +269,30 @@ function OwnerBookings() {
     queryFn: () => fetchMyBookings('owner').then((r) => r.data),
   })
 
-  const approve = useMutation({ mutationFn: approveBooking, onSuccess: invalidate })
-  const reject = useMutation({ mutationFn: rejectBooking, onSuccess: invalidate })
-  const handover = useMutation({ mutationFn: handoverBooking, onSuccess: invalidate })
+  const approve = useMutation({
+    mutationFn: approveBooking,
+    onSuccess: () => {
+      setActionError('')
+      invalidate()
+    },
+    onError: (error) => setActionError(getErrorMessage(error)),
+  })
+  const reject = useMutation({
+    mutationFn: rejectBooking,
+    onSuccess: () => {
+      setActionError('')
+      invalidate()
+    },
+    onError: (error) => setActionError(getErrorMessage(error)),
+  })
+  const handover = useMutation({
+    mutationFn: handoverBooking,
+    onSuccess: () => {
+      setActionError('')
+      invalidate()
+    },
+    onError: (error) => setActionError(getErrorMessage(error)),
+  })
   const isActing = approve.isPending || reject.isPending || handover.isPending
 
   if (isLoading) return <SectionSkeleton rows={3} />
@@ -268,8 +301,9 @@ function OwnerBookings() {
 
   return (
     <div className="space-y-2">
+      {actionError && <ErrorBanner message={actionError} />}
       {bookings.map((booking) => (
-        <BookingRow key={booking.id} booking={booking}>
+        <BookingRow key={booking.id} booking={booking} mode="owner">
           <div className="flex gap-2">
             {booking.status === 'PENDING' && (
               <>
@@ -305,36 +339,67 @@ function OwnerBookings() {
   )
 }
 
-// ─── Shared ───────────────────────────────────────────────────────────────────
-
-function BookingRow({ booking, children }: { booking: Booking; children?: React.ReactNode }) {
-  // Reuse the same query key as ItemDetailPage — served from cache if already visited.
-  const { data: item } = useQuery({
-    queryKey: ['item', String(booking.itemId)],
-    queryFn: () => fetchItem(booking.itemId).then((r) => r.data),
-    staleTime: 5 * 60 * 1000,
-  })
+function BookingRow({
+  booking,
+  mode,
+  children,
+}: {
+  booking: Booking
+  mode: 'renter' | 'owner'
+  children?: React.ReactNode
+}) {
+  const counterpartLabel = mode === 'owner' ? 'Requested by' : 'Owner'
+  const counterpartName =
+    mode === 'owner'
+      ? booking.renterUsername?.trim() || `User #${booking.renterId}`
+      : booking.ownerUsername?.trim() || `User #${booking.ownerId}`
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4">
-      <div className="min-w-0 flex-1">
-        <Link
-          to={`/items/${booking.itemId}`}
-          className="block truncate text-sm font-medium text-slate-900 hover:underline"
-        >
-          {item?.title ?? `Item #${booking.itemId}`}
-        </Link>
-        <p className="mt-0.5 text-xs text-slate-500">
-          {formatDate(booking.dateFrom)} → {formatDate(booking.dateTo)}
-        </p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex items-start gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to={`/items/${booking.itemId}`}
+              className="block truncate text-sm font-medium text-slate-900 hover:underline"
+            >
+              {booking.itemTitle ?? `Item #${booking.itemId}`}
+            </Link>
+            <BookingBadge status={booking.status} />
+          </div>
+          <div className="mt-2 grid gap-x-6 gap-y-2 text-xs text-slate-500 sm:grid-cols-2 lg:grid-cols-4">
+            <p>
+              <span className="font-medium text-slate-700">{counterpartLabel}:</span>{' '}
+              {counterpartName}
+            </p>
+            <p>
+              <span className="font-medium text-slate-700">Dates:</span>{' '}
+              {formatDate(booking.dateFrom)} - {formatDate(booking.dateTo)}
+            </p>
+            <p>
+              <span className="font-medium text-slate-700">Total:</span>{' '}
+              {booking.totalPrice != null ? `${booking.totalPrice.toLocaleString()} KZT` : 'N/A'}
+            </p>
+            <p>
+              <span className="font-medium text-slate-700">Created:</span>{' '}
+              {formatDate(booking.createdAt)}
+            </p>
+          </div>
+          {booking.renterNote && (
+            <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                Request note
+              </p>
+              <p className="mt-1 whitespace-pre-line text-sm text-slate-700">{booking.renterNote}</p>
+            </div>
+          )}
+        </div>
+        {children && <div className="shrink-0">{children}</div>}
       </div>
-      <BookingBadge status={booking.status} />
-      {children && <div className="shrink-0">{children}</div>}
     </div>
   )
 }
 
-// Small text-button used for booking actions — not worth a full Button variant.
 function ActionButton({
   variant,
   children,
@@ -391,7 +456,7 @@ function SectionSkeleton({ rows }: { rows: number }) {
   return (
     <div className="space-y-2">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-200" />
+        <div key={i} className="h-28 animate-pulse rounded-2xl bg-slate-200" />
       ))}
     </div>
   )

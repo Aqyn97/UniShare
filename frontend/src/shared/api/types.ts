@@ -124,8 +124,11 @@ export type BookingStatus =
 export interface Booking {
   id: number
   itemId: number
+  itemTitle: string | null
   renterId: number
+  renterUsername: string | null
   ownerId: number
+  ownerUsername: string | null
   dateFrom: string
   dateTo: string
   status: BookingStatus
