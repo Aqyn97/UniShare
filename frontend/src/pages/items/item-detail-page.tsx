@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../features/auth/use-auth'
 import { createBooking, fetchMyBookings } from '../../shared/api/bookings'
 import { getErrorMessage } from '../../shared/api/client'
-import { fetchItem, hideItem, publishItem } from '../../shared/api/items'
+import { fetchItem, fetchItemAvailability, hideItem, publishItem } from '../../shared/api/items'
 import { createReview, fetchItemReviews } from '../../shared/api/reviews'
-import type { Review } from '../../shared/api/types'
+import type { AvailabilityWindow, Review } from '../../shared/api/types'
 import { Button } from '../../shared/components/button'
 
 export function ItemDetailPage() {
@@ -413,14 +413,41 @@ function BookingForm({
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [openField, setOpenField] = useState<'from' | 'to' | null>(null)
+  const [calendarMonth, setCalendarMonth] = useState(() => startOfMonth(new Date()))
 
   const today = new Date().toISOString().split('T')[0]
+  const { data: availability = [] } = useQuery({
+    queryKey: ['item-availability', itemId],
+    queryFn: () => fetchItemAvailability(itemId).then((r) => r.data),
+  })
+  const upcomingAvailability = availability.filter((window) => window.endDate >= today)
+  const toMinDate = dateFrom ? toIsoDate(addDays(parseIsoDate(dateFrom), 1)) : today
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => createBooking({ itemId, dateFrom, dateTo, renterNote: note || undefined }),
     onSuccess: () => setSubmitted(true),
     onError: (err) => setError(getErrorMessage(err)),
   })
+
+  function openCalendar(field: 'from' | 'to') {
+    const baseValue = field === 'from' ? dateFrom : dateTo || dateFrom
+    setCalendarMonth(startOfMonth(baseValue ? parseIsoDate(baseValue) : parseIsoDate(today)))
+    setOpenField(field)
+  }
+
+  function handleFromSelect(nextDate: string) {
+    setDateFrom(nextDate)
+    if (dateTo && dateTo <= nextDate) {
+      setDateTo('')
+    }
+    setOpenField(null)
+  }
+
+  function handleToSelect(nextDate: string) {
+    setDateTo(nextDate)
+    setOpenField(null)
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -429,8 +456,12 @@ function BookingForm({
       setError('Please select both dates.')
       return
     }
-    if (dateFrom > dateTo) {
+    if (dateFrom >= dateTo) {
       setError('End date must be after start date.')
+      return
+    }
+    if (hasDateOverlap(dateFrom, dateTo, upcomingAvailability)) {
+      setError('Selected dates overlap with already booked dates.')
       return
     }
     mutate()
@@ -470,26 +501,33 @@ function BookingForm({
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-600">From</label>
-            <input
-              type="date"
-              value={dateFrom}
-              min={today}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-600">To</label>
-            <input
-              type="date"
-              value={dateTo}
-              min={dateFrom || today}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-            />
-          </div>
+          <CalendarField
+            label="From"
+            value={dateFrom}
+            placeholder="Select start date"
+            isOpen={openField === 'from'}
+            month={calendarMonth}
+            onOpen={() => openCalendar('from')}
+            onClose={() => setOpenField(null)}
+            onMonthChange={setCalendarMonth}
+            onSelect={handleFromSelect}
+            minDate={today}
+            unavailableWindows={upcomingAvailability}
+          />
+          <CalendarField
+            label="To"
+            value={dateTo}
+            placeholder="Select end date"
+            isOpen={openField === 'to'}
+            month={calendarMonth}
+            onOpen={() => openCalendar('to')}
+            onClose={() => setOpenField(null)}
+            onMonthChange={setCalendarMonth}
+            onSelect={handleToSelect}
+            minDate={toMinDate}
+            unavailableWindows={upcomingAvailability}
+            startDate={dateFrom || undefined}
+          />
           <div>
             <label className="mb-1.5 block text-xs font-medium text-slate-600">
               Note to owner <span className="font-normal text-slate-400">(optional)</span>
@@ -586,4 +624,243 @@ function ItemDetailSkeleton() {
       <div className="h-64 rounded-2xl bg-slate-200" />
     </div>
   )
+}
+
+function hasDateOverlap(dateFrom: string, dateTo: string, windows: AvailabilityWindow[]) {
+  return windows.some((window) => dateFrom <= window.endDate && dateTo >= window.startDate)
+}
+
+function CalendarField({
+  label,
+  value,
+  placeholder,
+  isOpen,
+  month,
+  onOpen,
+  onClose,
+  onMonthChange,
+  onSelect,
+  minDate,
+  unavailableWindows,
+  startDate,
+}: {
+  label: string
+  value: string
+  placeholder: string
+  isOpen: boolean
+  month: Date
+  onOpen: () => void
+  onClose: () => void
+  onMonthChange: (month: Date) => void
+  onSelect: (value: string) => void
+  minDate: string
+  unavailableWindows: AvailabilityWindow[]
+  startDate?: string
+}) {
+  const ref = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        onClose()
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, onClose])
+
+  return (
+    <div ref={ref} className="relative">
+      <label className="mb-1.5 block text-xs font-medium text-slate-600">{label}</label>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition hover:border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+      >
+        <span className={value ? 'text-slate-900' : 'text-slate-400'}>
+          {value ? formatCalendarInputValue(value) : placeholder}
+        </span>
+        <span className="text-slate-500">
+          <CalendarIcon />
+        </span>
+      </button>
+
+      {isOpen && (
+        <CalendarPopover
+          month={month}
+          value={value || undefined}
+          minDate={minDate}
+          unavailableWindows={unavailableWindows}
+          onMonthChange={onMonthChange}
+          onSelect={onSelect}
+          startDate={startDate}
+        />
+      )}
+    </div>
+  )
+}
+
+function CalendarPopover({
+  month,
+  value,
+  minDate,
+  unavailableWindows,
+  onMonthChange,
+  onSelect,
+  startDate,
+}: {
+  month: Date
+  value?: string
+  minDate: string
+  unavailableWindows: AvailabilityWindow[]
+  onMonthChange: (month: Date) => void
+  onSelect: (value: string) => void
+  startDate?: string
+}) {
+  const monthDays = getCalendarDays(month)
+
+  return (
+    <div className="absolute left-0 z-30 mt-2 w-[320px] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-200/80">
+      <div className="mb-4 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => onMonthChange(addMonths(month, -1))}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+        >
+          ‹
+        </button>
+        <p className="text-sm font-semibold text-slate-900">
+          {month.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+        </p>
+        <button
+          type="button"
+          onClick={() => onMonthChange(addMonths(month, 1))}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+        >
+          ›
+        </button>
+      </div>
+
+      <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+          <span key={day}>{day}</span>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {monthDays.map((day) => {
+          const iso = toIsoDate(day)
+          const isOutsideMonth = day.getMonth() !== month.getMonth()
+          const isSelected = value === iso
+          const isToday = iso === toIsoDate(new Date())
+          const isBooked =
+            isDateBooked(iso, unavailableWindows) ||
+            Boolean(startDate && hasDateOverlap(startDate, iso, unavailableWindows))
+          const isDisabled = iso < minDate || isBooked
+
+          return (
+            <button
+              key={iso}
+              type="button"
+              disabled={isDisabled}
+              onClick={() => onSelect(iso)}
+              className={[
+                'relative h-10 rounded-xl text-sm transition',
+                isSelected && 'bg-slate-900 font-semibold text-white',
+                !isSelected && !isDisabled && 'text-slate-900 hover:bg-slate-100',
+                isOutsideMonth && !isSelected && 'text-slate-300',
+                isDisabled && !isSelected && 'cursor-not-allowed text-slate-300',
+                isBooked && !isSelected && 'bg-rose-50 text-rose-400',
+                isToday && !isSelected && !isDisabled && 'ring-1 ring-slate-300',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              title={isBooked ? 'Booked date' : undefined}
+            >
+              <span className={isBooked ? 'line-through' : undefined}>{day.getDate()}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+        <span className="inline-flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-rose-100 ring-1 ring-rose-200" />
+          Booked
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-slate-900" />
+          Selected
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function CalendarIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>
+  )
+}
+
+function getCalendarDays(month: Date) {
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1)
+  const firstWeekday = (firstDay.getDay() + 6) % 7
+  const start = addDays(firstDay, -firstWeekday)
+
+  return Array.from({ length: 42 }, (_, index) => addDays(start, index))
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function addMonths(date: Date, amount: number) {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1)
+}
+
+function addDays(date: Date, amount: number) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount)
+}
+
+function parseIsoDate(value: string) {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function toIsoDate(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatCalendarInputValue(value: string) {
+  const [year, month, day] = value.split('-')
+  return `${day}.${month}.${year}`
+}
+
+function isDateBooked(date: string, windows: AvailabilityWindow[]) {
+  return windows.some((window) => date >= window.startDate && date <= window.endDate)
 }

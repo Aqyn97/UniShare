@@ -69,6 +69,12 @@ export interface ItemImage {
   url: string
 }
 
+export interface AvailabilityWindow {
+  startDate: string
+  endDate: string
+  source: 'BOOKING' | 'MANUAL_BLOCK'
+}
+
 export interface Item {
   id: number
   ownerId: number
