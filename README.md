@@ -1,95 +1,161 @@
-# UniShare
+<div align="center">
 
-UniShare is a full-stack campus rental marketplace where students can list items, book them, and manage rentals in one place.
+<br/>
 
-## Problem Statement
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="assets/logo-light.png">
+  <img alt="UniShare Logo" src="assets/logo-light.jpg" width="90" />
+</picture>
 
-Students often need short-term access to textbooks, tools, electronics, and other useful items, but buying them outright is expensive and wasteful. UniShare solves this by giving students a trusted campus-focused platform to share, rent, and review items inside their community.
+<h1>UniShare</h1>
+
+<p><strong>Campus peer-to-peer rental marketplace for students</strong><br/>
+Rent a textbook for a week. Lend your camera over break. Stop buying things you'll use twice.</p>
+
+<br/>
+
+[![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/17/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-TypeScript-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3.x-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+
+<br/>
+
+[**Demo**](#screenshots) · [**Swagger UI**](http://localhost:8080/swagger-ui/index.html) · [**Report a Bug**](https://github.com/Aqyn97/UniShare/issues/new) · [**Request a Feature**](https://github.com/Aqyn97/UniShare/issues/new)
+
+<br/>
+
+<img src="assets/screenshots/preview.jpg" alt="UniShare preview" width="820" />
+
+<br/><br/>
+
+</div>
+
+---
+
+## The problem
+
+A $200 textbook for one semester. An $80 calculator needed for one midterm. A camera kit sitting untouched for 11 months.
+
+Campus stores don't help. Facebook Marketplace is a gamble. UniShare is the missing layer — students listing what they have, other students renting what they need, with a full booking workflow built in so nothing falls apart in someone's DMs.
+
+---
+
+## Table of contents
+
+- [Screenshots](#screenshots)
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Project structure](#project-structure)
+- [API docs](#api-docs)
+- [Team](#team)
+
+---
+
+## Screenshots
+
+<div align="center">
+
+| Home | Dashboard | Booking |
+|:---:|:---:|:---:|
+| ![Home](assets/screenshots/home.jpg) | ![Dashboard](assets/screenshots/dashboard.jpg) | ![Booking](assets/screenshots/booking.png) |
+
+</div>
+
+> Screenshots not added yet. Drop them in assets/screenshots/ and update this table.
+
+---
 
 ## Features
 
-- User registration and login with session-based authentication
-- Email confirmation before first sign-in
-- Password reset via secure email link
-- Browse, search, and filter item listings by category
-- Create, edit, publish, hide, and delete listings
-- Upload and manage listing images
-- Booking lifecycle management: request, approve, reject, hand over, return, and cancel
-- Reviews for completed rentals
-- Personal dashboard for listings and bookings
-- Admin panel for user moderation, item moderation, and platform statistics
-- Swagger / OpenAPI documentation for backend endpoints
+For renters
+- Search and filter listings by category, keyword, and availability
+- Send a booking request with a date range and a message to the owner
+- Track the rental from request to return
+- Leave a review after it's done
 
-## Project Structure
+For listers
+- Create listings with photos, a description, and pricing
+- Approve or reject incoming booking requests
+- Confirm handover and return — every stage is recorded
+- Publish, hide, or delete listings whenever you want
 
-```text
-.
-├── src/                # Spring Boot backend source
-├── frontend/           # React + Vite frontend
-├── docs/               # Repository docs and API collection
-├── tests/              # Reserved for future repository-level tests
-├── assets/             # Screenshots and shared media
-├── build.gradle
-├── docker-compose.yml
-└── README.md
-```
+Platform-wide
+- Session-based authentication (no tokens floating in localStorage)
+- Email confirmation on sign-up, secure password reset via email link
+- Admin panel for user and item moderation, platform statistics
+- Full Swagger UI — every endpoint is documented and testable without any setup
+
+---
+
+## Tech stack
+
+| Layer | Technologies |
+|---|---|
+| Backend | Java 17, Spring Boot 3, Spring Security, Spring Data JPA, Flyway |
+| Database | PostgreSQL 16 |
+| Frontend | React 18, TypeScript, Vite, React Router v6 |
+| Data layer | Axios, TanStack Query, React Hook Form, Zod |
+| Styling | Tailwind CSS |
+| Images | Cloudinary |
+| API docs | Springdoc OpenAPI / Swagger UI |
+| Tooling | Gradle, npm, Docker Compose |
+
+---
 
 ## Installation
 
-### Prerequisites
+### What you need first
 
-- Java 17
-- Node.js 18+ and npm
-- Docker Desktop or local PostgreSQL
+- [Java 17](https://adoptium.net/)
+- [Node.js 18+](https://nodejs.org/) and npm
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-### 1. Clone the repository
+### Step 1 — Clone
 
 ```bash
 git clone https://github.com/Aqyn97/UniShare.git
-cd PMProject
+cd UniShare
 ```
 
-### 2. Start the database
+### Step 2 — Start the database
 
 ```bash
 docker compose up -d
 ```
 
-This starts PostgreSQL on `localhost:5433`.
+PostgreSQL will be running on `localhost:5433`.
 
-### 3. Configure environment variables
+### Step 3 — Set up environment variables
 
-Create a root `.env` file. Database settings can use the defaults, but auth email links now need frontend and mail configuration.
+Create a `.env` file in the project root:
 
 ```env
+# Database
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5433/pm_project_db
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=postgres
 
+# Auth & Email
 APP_AUTH_FRONTEND_BASE_URL=http://localhost:5173
 APP_AUTH_EMAIL_ENABLED=true
 APP_AUTH_MAIL_MODE=log
 APP_AUTH_MAIL_FROM=no-reply@unishare.local
 
+# Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-`APP_AUTH_EMAIL_ENABLED=true` keeps email confirmation and password reset enabled.
+> `APP_AUTH_MAIL_MODE=log` — confirmation and password reset links print to the backend console instead of sending real emails. This is the easiest option for local development.
 
-Set `APP_AUTH_EMAIL_ENABLED=false` to turn off all email-based auth flows. In that mode:
-
-- new accounts are created with `emailVerified=true`
-- sign-in is no longer blocked by email confirmation
-- verify/resend/forgot/reset email endpoints are disabled
-- the frontend hides and redirects email confirmation and password reset pages
-
-After changing this flag, restart both the backend and the Vite frontend so they reload `.env`.
-
-`APP_AUTH_MAIL_MODE=log` is the easiest mode for local development. In this mode, confirmation and reset links are written to the backend logs instead of being sent to a real mailbox.
-
-If you want real emails, switch to SMTP mode:
+<details>
+<summary>Want real outbound emails? Expand for SMTP config.</summary>
 
 ```env
 APP_AUTH_MAIL_MODE=smtp
@@ -102,19 +168,24 @@ SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
 SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
 ```
 
-Without `APP_AUTH_FRONTEND_BASE_URL`, email links may point to the wrong frontend address.
+</details>
 
-### 4. Run the backend
+<details>
+<summary>Want to skip email verification entirely for dev? Expand here.</summary>
+
+Set `APP_AUTH_EMAIL_ENABLED=false`. Accounts skip verification, sign-in is immediate, and all email endpoints are disabled. Restart both the backend and frontend after changing this.
+
+</details>
+
+### Step 4 — Start the backend
 
 ```bash
 ./gradlew bootRun
 ```
 
-The backend runs on `http://localhost:8080`.
+Runs on `http://localhost:8080`. Flyway applies all database migrations automatically on first start.
 
-On first start after pulling the latest changes, Flyway will add the email verification and password reset tables automatically.
-
-### 5. Run the frontend
+### Step 5 — Start the frontend
 
 ```bash
 cd frontend
@@ -122,43 +193,70 @@ npm install
 npm run dev
 ```
 
-The frontend runs on `http://localhost:5173`.
+Runs on `http://localhost:5173`. Open it in your browser.
 
-## Authentication Flow
-
-- After registration, the user is redirected to an email confirmation page.
-- The user cannot sign in until the email is confirmed.
-- If `APP_AUTH_MAIL_MODE=log`, copy the confirmation/reset link from the backend logs.
-- If SMTP is configured, the user receives a real email with the confirmation or password reset link.
-- Password reset is available from the login page through the "Forgot password?" link.
-
-If `APP_AUTH_EMAIL_ENABLED=false`, registration goes straight to the sign-in flow and all email-based auth steps are skipped.
+---
 
 ## Usage
 
-1. Open the frontend in your browser.
-2. Register a new account or sign in.
-3. Browse available listings from the home page.
-4. Filter listings by keyword or category.
-5. Create your own listing from the dashboard.
-6. Send booking requests and manage rental activity.
-7. Open the admin panel if your account has admin access.
+1. Register a new account
+2. Confirm your email
+   - Using `APP_AUTH_MAIL_MODE=log`? Copy the link from the backend console
+3. Sign in
+4. Browse listings from the home page
+5. Create your own listing from the dashboard
+6. Send booking requests — track them through to return
 
-## Screenshots
+---
 
-No screenshots have been added yet. If needed, place them in `assets/` and reference them here.
+## Project structure
 
-## Technology Stack
+```
+UniShare/
+├── src/
+│   └── main/
+│       ├── java/               # Spring Boot app (controllers, services, repos)
+│       └── resources/
+│           └── db/migration/   # Flyway SQL migrations
+├── frontend/
+│   └── src/
+│       ├── components/         # Reusable UI components
+│       ├── pages/              # Route-level views
+│       ├── api/                # Axios client + TanStack Query hooks
+│       └── types/              # TypeScript types
+├── docs/
+│   └── api/                    # Postman collection
+├── tests/                      # Reserved for future tests
+├── assets/                     # Screenshots and media
+├── docker-compose.yml
+├── build.gradle
+├── .gitignore
+├── LICENSE
+└── README.md
+```
 
-- Backend: Java 17, Spring Boot, Spring Security, Spring Data JPA, Flyway
-- Database: PostgreSQL
-- API Docs: Springdoc OpenAPI / Swagger UI
-- Frontend: React, TypeScript, Vite, React Router
-- Frontend Data Layer: Axios, TanStack Query, React Hook Form, Zod
-- Styling: Tailwind CSS
-- Tooling: Gradle, npm, Docker Compose
+---
 
-## API and Docs
+## API docs
 
-- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-- Postman collection: `docs/api/unishare-postman-collection.json`
+The full API is documented with Springdoc OpenAPI. Every endpoint is explorable and testable directly in the browser.
+
+- Swagger UI → https://adventurous-reprieve-production-7ee3.up.railway.app/swagger-ui/index.html
+- Postman collection → `docs/api/unishare-postman-collection.json`
+
+---
+
+## Team
+
+| Name | Student ID |
+|---|---|
+| Tolegen Nurdaulet | 230103104 |
+| Sultan Assimbek | 230103379 |
+| Aman Kalabay | 230103375 |
+| Tulegen Yerassyl | 230103342 |
+
+---
+
+<div align="center">
+<sub>Built by students, for students.</sub>
+</div>
