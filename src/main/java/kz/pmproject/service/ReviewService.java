@@ -2,9 +2,11 @@ package kz.pmproject.service;
 
 import kz.pmproject.model.market.dto.ReviewCreateRequest;
 import kz.pmproject.model.market.dto.ReviewResponse;
+import kz.pmproject.model.market.entity.Booking;
 import kz.pmproject.model.market.entity.Item;
 import kz.pmproject.model.market.entity.Review;
 import kz.pmproject.model.user.entity.User;
+import kz.pmproject.repository.BookingRepository;
 import kz.pmproject.repository.ItemRepository;
 import kz.pmproject.repository.ReviewRepository;
 import kz.pmproject.repository.UserRepository;
@@ -21,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewService {
 
+    private final BookingRepository bookingRepository;
     private final ReviewRepository reviewRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -37,6 +40,18 @@ public class ReviewService {
 
         if (item.getOwner().getId().equals(currentUserId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot review your own item");
+        }
+
+        boolean hasCompletedBooking = bookingRepository.existsByRenterIdAndItemIdAndStatus(
+                currentUserId,
+                item.getId(),
+                Booking.BookingStatus.COMPLETED
+        );
+        if (!hasCompletedBooking) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only users who completed a booking for this item can leave a review"
+            );
         }
 
         if (reviewRepository.existsByItemIdAndAuthorId(request.getItemId(), currentUserId)) {

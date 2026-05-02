@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../features/auth/use-auth'
-import { createBooking } from '../../shared/api/bookings'
+import { createBooking, fetchMyBookings } from '../../shared/api/bookings'
 import { getErrorMessage } from '../../shared/api/client'
 import { fetchItem, hideItem, publishItem } from '../../shared/api/items'
 import { createReview, fetchItemReviews } from '../../shared/api/reviews'
@@ -183,12 +183,22 @@ function ReviewsSection({
     queryFn: () => fetchItemReviews(itemId).then((r) => r.data),
   })
 
+  const { data: myBookings = [] } = useQuery({
+    queryKey: ['bookings', 'renter'],
+    queryFn: () => fetchMyBookings('renter').then((r) => r.data),
+    enabled: isAuthenticated,
+  })
+
   const hasOwnReview =
     currentUserId != null && reviews.some((review) => review.authorId === currentUserId)
+  const hasCompletedBooking =
+    currentUserId != null &&
+    myBookings.some((booking) => booking.itemId === itemId && booking.status === 'COMPLETED')
   const canReview =
     isAuthenticated &&
     currentUserId != null &&
     currentUserId !== ownerId &&
+    hasCompletedBooking &&
     !hasOwnReview
   const avgRating = ratingAvg != null ? ratingAvg.toFixed(1) : null
   const reviewsTotal = ratingCount || reviews.length
@@ -234,6 +244,12 @@ function ReviewsSection({
           {isAuthenticated && currentUserId === ownerId && (
             <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600">
               You cannot leave a review for your own item.
+            </div>
+          )}
+
+          {isAuthenticated && currentUserId !== ownerId && !hasCompletedBooking && (
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600">
+              Only users who completed a booking for this item can leave a review.
             </div>
           )}
 
