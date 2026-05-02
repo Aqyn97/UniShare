@@ -4,13 +4,16 @@ import kz.pmproject.model.market.dto.ItemImageResponse;
 import kz.pmproject.model.market.dto.ItemResponse;
 import kz.pmproject.model.market.entity.Item;
 import kz.pmproject.model.market.entity.ItemImage;
+import kz.pmproject.repository.ItemRatingSummary;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Component
 public class ItemMapper {
-    public ItemResponse toResponse(Item item, List<ItemImage> images) {
+    public ItemResponse toResponse(Item item, List<ItemImage> images, Double ratingAvg, long ratingCount) {
         return ItemResponse.builder()
                 .id(item.getId())
                 .ownerId(item.getOwner().getId())
@@ -24,8 +27,19 @@ public class ItemMapper {
                 .published(item.isPublished())
                 .createdAt(item.getCreatedAt())
                 .updatedAt(item.getUpdatedAt())
+                .ratingAvg(roundRating(ratingAvg))
+                .ratingCount(ratingCount)
                 .images(images == null ? List.of() : images.stream().map(this::toImageResponse).toList())
                 .build();
+    }
+
+    public ItemResponse toResponse(Item item, List<ItemImage> images, ItemRatingSummary ratingSummary) {
+        return toResponse(
+                item,
+                images,
+                ratingSummary == null ? null : ratingSummary.getRatingAvg(),
+                ratingSummary == null ? 0 : ratingSummary.getRatingCount()
+        );
     }
 
     public ItemImageResponse toImageResponse(ItemImage img) {
@@ -35,6 +49,13 @@ public class ItemMapper {
                 .url(img.getUrl())
                 .createdAt(img.getCreatedAt())
                 .build();
+    }
+
+    private BigDecimal roundRating(Double ratingAvg) {
+        if (ratingAvg == null) {
+            return null;
+        }
+        return BigDecimal.valueOf(ratingAvg).setScale(2, RoundingMode.HALF_UP);
     }
 }
 

@@ -7,7 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews", uniqueConstraints = @UniqueConstraint(name = "uk_reviews_booking_author", columnNames = {"booking_id", "author_id"}))
+@Table(name = "reviews", uniqueConstraints = @UniqueConstraint(name = "uk_reviews_item_author", columnNames = {"item_id", "author_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,7 +17,7 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "booking_id", nullable = false)
+    @Column(name = "booking_id")
     private Long bookingId;
 
     @Column(name = "item_id", nullable = false)

@@ -2,12 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../features/auth/use-auth'
-import { createBooking, fetchMyBookings } from '../../shared/api/bookings'
+import { createBooking } from '../../shared/api/bookings'
+import { getErrorMessage } from '../../shared/api/client'
 import { fetchItem, hideItem, publishItem } from '../../shared/api/items'
 import { createReview, fetchItemReviews } from '../../shared/api/reviews'
-import { getErrorMessage } from '../../shared/api/client'
-import { Button } from '../../shared/components/button'
 import type { Review } from '../../shared/api/types'
+import { Button } from '../../shared/components/button'
 
 export function ItemDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -26,7 +26,7 @@ export function ItemDetailPage() {
       <div className="py-20 text-center">
         <p className="text-lg font-semibold text-slate-800">Item not found</p>
         <p className="mt-2 text-sm text-slate-500">
-          This listing may have been removed or doesn't exist.
+          This listing may have been removed or doesn&apos;t exist.
         </p>
         <Link
           to="/"
@@ -45,7 +45,6 @@ export function ItemDetailPage() {
   return (
     <div className="space-y-10">
       <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
-        {/* Left column */}
         <div className="space-y-6">
           <ImageGallery images={item.images} title={item.title} />
 
@@ -58,6 +57,13 @@ export function ItemDetailPage() {
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
               {item.title}
             </h1>
+            {item.ratingAvg != null && item.ratingCount > 0 && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                <Stars rating={Math.round(item.ratingAvg)} />
+                <span className="font-medium text-slate-900">{item.ratingAvg.toFixed(1)}</span>
+                <span className="text-slate-400">({item.ratingCount} reviews)</span>
+              </div>
+            )}
             {item.price != null ? (
               <p className="mt-3 text-2xl font-semibold text-slate-900">
                 {item.price.toLocaleString()}{' '}
@@ -90,7 +96,6 @@ export function ItemDetailPage() {
           </div>
         </div>
 
-        {/* Right column */}
         <div>
           {isOwner ? (
             <OwnerControls itemId={item.id} published={item.published} />
@@ -100,17 +105,17 @@ export function ItemDetailPage() {
         </div>
       </div>
 
-      {/* Reviews */}
       <ReviewsSection
         itemId={item.id}
+        ownerId={item.ownerId}
+        ratingAvg={item.ratingAvg}
+        ratingCount={item.ratingCount}
         isAuthenticated={isAuthenticated}
         currentUserId={user?.userId}
       />
     </div>
   )
 }
-
-// ─── Image gallery ────────────────────────────────────────────────────────────
 
 function ImageGallery({
   images,
@@ -156,14 +161,18 @@ function ImageGallery({
   )
 }
 
-// ─── Reviews section ──────────────────────────────────────────────────────────
-
 function ReviewsSection({
   itemId,
+  ownerId,
+  ratingAvg,
+  ratingCount,
   isAuthenticated,
   currentUserId,
 }: {
   itemId: number
+  ownerId: number
+  ratingAvg: number | null
+  ratingCount: number
   isAuthenticated: boolean
   currentUserId: number | undefined
 }) {
@@ -174,27 +183,20 @@ function ReviewsSection({
     queryFn: () => fetchItemReviews(itemId).then((r) => r.data),
   })
 
-  // Fetch current user's bookings to check for completed ones on this item.
-  // Only runs when authenticated — no point fetching otherwise.
-  const { data: myBookings = [] } = useQuery({
-    queryKey: ['bookings', 'renter'],
-    queryFn: () => fetchMyBookings('renter').then((r) => r.data),
-    enabled: isAuthenticated,
-  })
-
-  // A completed booking for this item that hasn't been reviewed yet.
-  const reviewedBookingIds = new Set(reviews.map((r) => r.bookingId))
-  const eligibleBooking = myBookings.find(
-    (b) => b.itemId === itemId && b.status === 'COMPLETED' && !reviewedBookingIds.has(b.id),
-  )
-
-  const avgRating =
-    reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-      : null
+  const hasOwnReview =
+    currentUserId != null && reviews.some((review) => review.authorId === currentUserId)
+  const canReview =
+    isAuthenticated &&
+    currentUserId != null &&
+    currentUserId !== ownerId &&
+    !hasOwnReview
+  const avgRating = ratingAvg != null ? ratingAvg.toFixed(1) : null
+  const reviewsTotal = ratingCount || reviews.length
 
   function handleReviewSubmitted() {
     qc.invalidateQueries({ queryKey: ['reviews', 'item', itemId] })
+    qc.invalidateQueries({ queryKey: ['item', String(itemId)] })
+    qc.invalidateQueries({ queryKey: ['items'] })
   }
 
   return (
@@ -205,7 +207,7 @@ function ReviewsSection({
           <span className="flex items-center gap-1 text-sm text-slate-600">
             <Stars rating={Math.round(Number(avgRating))} />
             <span className="font-medium">{avgRating}</span>
-            <span className="text-slate-400">({reviews.length})</span>
+            <span className="text-slate-400">({reviewsTotal})</span>
           </span>
         )}
       </div>
@@ -218,21 +220,32 @@ function ReviewsSection({
         </div>
       ) : (
         <div className="space-y-3">
-          {eligibleBooking && (
-            <ReviewForm
-              bookingId={eligibleBooking.id}
-              onSubmitted={handleReviewSubmitted}
-            />
+          {canReview && <ReviewForm itemId={itemId} onSubmitted={handleReviewSubmitted} />}
+
+          {!isAuthenticated && (
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600">
+              <Link to="/login" className="font-medium text-slate-900 underline underline-offset-2">
+                Log in
+              </Link>{' '}
+              to leave a review for this item.
+            </div>
+          )}
+
+          {isAuthenticated && currentUserId === ownerId && (
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600">
+              You cannot leave a review for your own item.
+            </div>
+          )}
+
+          {isAuthenticated && hasOwnReview && (
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600">
+              You have already left a review for this item.
+            </div>
           )}
 
           {reviews.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500">
               No reviews yet.
-              {isAuthenticated && !eligibleBooking && (
-                <p className="mt-1 text-xs text-slate-400">
-                  Complete a booking to leave a review.
-                </p>
-              )}
             </div>
           ) : (
             reviews.map((review) => (
@@ -246,10 +259,10 @@ function ReviewsSection({
 }
 
 function ReviewForm({
-  bookingId,
+  itemId,
   onSubmitted,
 }: {
-  bookingId: number
+  itemId: number
   onSubmitted: () => void
 }) {
   const [rating, setRating] = useState(0)
@@ -257,7 +270,7 @@ function ReviewForm({
   const [error, setError] = useState('')
 
   const { mutate, isPending } = useMutation({
-    mutationFn: () => createReview({ bookingId, rating, comment: comment.trim() || undefined }),
+    mutationFn: () => createReview({ itemId, rating, comment: comment.trim() || undefined }),
     onSuccess: () => {
       onSubmitted()
       setRating(0)
@@ -281,7 +294,6 @@ function ReviewForm({
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
       <p className="mb-4 text-sm font-semibold text-slate-900">Leave a review</p>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Star picker */}
         <div>
           <p className="mb-2 text-xs font-medium text-slate-600">Rating</p>
           <div className="flex gap-1">
@@ -294,7 +306,7 @@ function ReviewForm({
                   n <= rating ? 'text-amber-400' : 'text-slate-200 hover:text-amber-200'
                 }`}
               >
-                ★
+                {'★'}
               </button>
             ))}
           </div>
@@ -335,13 +347,18 @@ function ReviewCard({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Stars rating={review.rating} />
-          {isOwn && (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-              Your review
-            </span>
-          )}
+        <div>
+          <div className="flex items-center gap-2">
+            <Stars rating={review.rating} />
+            {isOwn && (
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                Your review
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            {review.authorUsername?.trim() || `User #${review.authorId}`}
+          </p>
         </div>
         <time className="shrink-0 text-xs text-slate-400">
           {new Date(review.createdAt).toLocaleDateString('en-GB', {
@@ -351,9 +368,7 @@ function ReviewCard({
           })}
         </time>
       </div>
-      {review.comment && (
-        <p className="mt-3 text-sm leading-6 text-slate-700">{review.comment}</p>
-      )}
+      {review.comment && <p className="mt-3 text-sm leading-6 text-slate-700">{review.comment}</p>}
     </div>
   )
 }
@@ -363,14 +378,12 @@ function Stars({ rating }: { rating: number }) {
     <span className="text-sm leading-none">
       {[1, 2, 3, 4, 5].map((n) => (
         <span key={n} className={n <= rating ? 'text-amber-400' : 'text-slate-200'}>
-          ★
+          {'★'}
         </span>
       ))}
     </span>
   )
 }
-
-// ─── Booking form ─────────────────────────────────────────────────────────────
 
 function BookingForm({
   itemId,
@@ -412,7 +425,7 @@ function BookingForm({
       <div className="sticky top-6 rounded-2xl border border-green-200 bg-green-50 p-6">
         <p className="text-sm font-semibold text-green-800">Booking request sent!</p>
         <p className="mt-1 text-sm text-green-700">
-          The owner will review your request. You'll see the status in your dashboard.
+          The owner will review your request. You&apos;ll see the status in your dashboard.
         </p>
         <Link to="/dashboard" className="mt-4 block">
           <Button className="w-full">Go to dashboard</Button>
@@ -463,8 +476,7 @@ function BookingForm({
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium text-slate-600">
-              Note to owner{' '}
-              <span className="font-normal text-slate-400">(optional)</span>
+              Note to owner <span className="font-normal text-slate-400">(optional)</span>
             </label>
             <textarea
               value={note}
@@ -490,8 +502,6 @@ function BookingForm({
   )
 }
 
-// ─── Owner controls ───────────────────────────────────────────────────────────
-
 function OwnerControls({ itemId, published }: { itemId: number; published: boolean }) {
   const qc = useQueryClient()
   const invalidate = () => qc.invalidateQueries({ queryKey: ['item', String(itemId)] })
@@ -508,7 +518,7 @@ function OwnerControls({ itemId, published }: { itemId: number; published: boole
       <p className="mb-5 text-sm text-slate-600">
         Status:{' '}
         <span className={published ? 'font-medium text-green-600' : 'font-medium text-amber-600'}>
-          {published ? 'Published' : 'Draft — not visible to others'}
+          {published ? 'Published' : 'Draft - not visible to others'}
         </span>
       </p>
       <div className="space-y-2">
@@ -522,11 +532,7 @@ function OwnerControls({ itemId, published }: { itemId: number; published: boole
             Unpublish
           </Button>
         ) : (
-          <Button
-            className="w-full"
-            loading={isActing}
-            onClick={() => publish.mutate()}
-          >
+          <Button className="w-full" loading={isActing} onClick={() => publish.mutate()}>
             Publish listing
           </Button>
         )}
@@ -536,14 +542,14 @@ function OwnerControls({ itemId, published }: { itemId: number; published: boole
           </Button>
         </Link>
         <Link to="/dashboard">
-          <Button variant="secondary" className="w-full">Go to dashboard</Button>
+          <Button variant="secondary" className="w-full">
+            Go to dashboard
+          </Button>
         </Link>
       </div>
     </div>
   )
 }
-
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function ItemDetailSkeleton() {
   return (

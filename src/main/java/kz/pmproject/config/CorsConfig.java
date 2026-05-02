@@ -16,7 +16,8 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-                "https://frontend-production-9056.up.railway.app"
+                "https://frontend-production-9056.up.railway.app",
+                "http://localhost:5173/"
         ));
 
         config.setAllowedMethods(List.of(

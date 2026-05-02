@@ -2,10 +2,10 @@ package kz.pmproject.service;
 
 import kz.pmproject.model.market.dto.ReviewCreateRequest;
 import kz.pmproject.model.market.dto.ReviewResponse;
-import kz.pmproject.model.market.entity.Booking;
+import kz.pmproject.model.market.entity.Item;
 import kz.pmproject.model.market.entity.Review;
 import kz.pmproject.model.user.entity.User;
-import kz.pmproject.repository.BookingRepository;
+import kz.pmproject.repository.ItemRepository;
 import kz.pmproject.repository.ReviewRepository;
 import kz.pmproject.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,43 +22,39 @@ import java.util.List;
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final BookingRepository bookingRepository;
+    private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final AuthorizationService authorizationService;
 
     @Transactional
     public ReviewResponse create(Long currentUserId, ReviewCreateRequest request) {
-        Booking booking = bookingRepository.findById(request.getBookingId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
+        Item item = itemRepository.findById(request.getItemId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
 
-        if (!booking.getRenterId().equals(currentUserId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only renter can leave review");
+        if (!item.isPublished()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You can review only published items");
         }
 
-        if (booking.getStatus() != Booking.BookingStatus.COMPLETED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Review allowed only for completed booking");
+        if (item.getOwner().getId().equals(currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot review your own item");
         }
 
-        if (reviewRepository.existsByBookingIdAndAuthorId(request.getBookingId(), currentUserId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Review already exists for this booking");
-        }
-
-        if (booking.getOwnerId().equals(currentUserId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot review yourself");
+        if (reviewRepository.existsByItemIdAndAuthorId(request.getItemId(), currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have already reviewed this item");
         }
 
         Review review = Review.builder()
-                .bookingId(booking.getId())
-                .itemId(booking.getItemId())
+                .bookingId(null)
+                .itemId(item.getId())
                 .authorId(currentUserId)
-                .targetUserId(booking.getOwnerId())
+                .targetUserId(item.getOwner().getId())
                 .rating(request.getRating())
-                .comment(request.getComment())
+                .comment(normalizeComment(request.getComment()))
                 .build();
 
         Review saved = reviewRepository.save(review);
 
-        recalculateUserRating(booking.getOwnerId());
+        recalculateUserRating(item.getOwner().getId());
 
         return toResponse(saved);
     }
@@ -105,17 +101,30 @@ public class ReviewService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        user.setRatingAvg(BigDecimal.valueOf(reviews.isEmpty() ? null : Math.round(avg * 100.0) / 100.0));
+        user.setRatingAvg(reviews.isEmpty() ? null : BigDecimal.valueOf(Math.round(avg * 100.0) / 100.0));
         user.setRatingCount(reviews.size());
         userRepository.save(user);
     }
 
+    private String normalizeComment(String comment) {
+        if (comment == null) {
+            return null;
+        }
+        String trimmed = comment.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
     private ReviewResponse toResponse(Review review) {
+        String authorUsername = userRepository.findById(review.getAuthorId())
+                .map(User::getUsername)
+                .orElse(null);
+
         return ReviewResponse.builder()
                 .id(review.getId())
                 .bookingId(review.getBookingId())
                 .itemId(review.getItemId())
                 .authorId(review.getAuthorId())
+                .authorUsername(authorUsername)
                 .targetUserId(review.getTargetUserId())
                 .rating(review.getRating())
                 .comment(review.getComment())

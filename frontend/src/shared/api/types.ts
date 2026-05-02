@@ -82,6 +82,8 @@ export interface Item {
   published: boolean
   createdAt: string
   updatedAt: string
+  ratingAvg: number | null
+  ratingCount: number
   images: ItemImage[]
 }
 
@@ -142,9 +144,10 @@ export interface BookingCreateRequest {
 
 export interface Review {
   id: number
-  bookingId: number
+  bookingId: number | null
   itemId: number
   authorId: number
+  authorUsername: string | null
   targetUserId: number
   rating: number
   comment: string | null
@@ -152,7 +155,7 @@ export interface Review {
 }
 
 export interface ReviewCreateRequest {
-  bookingId: number
+  itemId: number
   rating: number
   comment?: string
 }

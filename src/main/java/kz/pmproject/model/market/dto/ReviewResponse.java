@@ -12,6 +12,7 @@ public class ReviewResponse {
     private Long bookingId;
     private Long itemId;
     private Long authorId;
+    private String authorUsername;
     private Long targetUserId;
     private Integer rating;
     private String comment;
